@@ -79,8 +79,7 @@ flowchart TD
 | POST | `/companies/:companyId/agent-hires` | 雇用 Agent（走 Approval 流程）|
 | GET | `/agents/:id` | 取得 Agent 詳情 |
 | GET | `/agents/:id/configuration` | 取得 Agent 設定 |
-| GET | `/agents/:id/config-revisions` | 取得設定版本歷史 |
-| POST | `/agents/:id/config-revisions/:revisionId/rollback` | 回滾設定版本 |
+| GET | `/agents/:id/config-revisions` | 取得設定版本歷史（可回滾）|
 | PATCH | `/agents/:id/permissions` | 更新 Agent 權限 |
 | PATCH | `/agents/:id/instructions-bundle` | 更新 Agent 指令集 |
 | GET | `/agents/:id/runtime-state` | 取得執行時狀態 |
@@ -174,7 +173,6 @@ flowchart TD
 | GET | `/companies/:companyId/costs/summary` | 費用摘要 |
 | GET | `/companies/:companyId/costs/by-agent` | 依 Agent 分類費用 |
 | GET | `/companies/:companyId/costs/by-provider` | 依 LLM Provider 分類費用 |
-| GET | `/companies/:companyId/costs/window-spend` | 視窗期間費用 |
 | GET | `/companies/:companyId/budgets/overview` | 預算總覽 |
 | PATCH | `/companies/:companyId/budgets` | 更新公司預算 |
 | PATCH | `/agents/:agentId/budgets` | 更新 Agent 預算 |
@@ -186,14 +184,12 @@ flowchart TD
 |--------|------|------|
 | GET | `/plugins` | 列出已安裝的 Plugin |
 | GET | `/plugins/examples` | 列出範例 Plugin |
-| GET | `/plugins/ui-contributions` | 列出 UI 貢獻項目 |
 | GET | `/plugins/tools` | 列出 Plugin 工具 |
 | POST | `/plugins/tools/execute` | 執行 Plugin 工具 |
 | POST | `/plugins/install` | 安裝 Plugin |
 | GET | `/plugins/:pluginId` | 取得 Plugin 詳情 |
 | DELETE | `/plugins/:pluginId` | 移除 Plugin |
-| POST | `/plugins/:pluginId/enable` | 啟用 Plugin |
-| POST | `/plugins/:pluginId/disable` | 停用 Plugin |
+| POST | `/plugins/:pluginId/enable` / `disable` | 啟用 / 停用 Plugin |
 | GET | `/plugins/:pluginId/health` | Plugin 健康狀態 |
 | POST | `/plugins/:pluginId/upgrade` | 升級 Plugin |
 | GET | `/plugins/:pluginId/bridge/stream/:channel` | Plugin SSE 事件串流 |
