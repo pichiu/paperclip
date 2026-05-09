@@ -1,111 +1,111 @@
-# 設定と環境（Configuration）
+# 設定與環境（Configuration）
 
-## 設定の優先順位
+## 設定的優先順序
 
 ```
-環境変数 (最優先)
+環境變數（最優先）
     │
     ▼
-PAPERCLIP_ENV_FILE_PATH (.paperclip/.env または ~/.paperclip/.env)
+PAPERCLIP_ENV_FILE_PATH（.paperclip/.env 或 ~/.paperclip/.env）
     │
     ▼
 CWD/.env
     │
     ▼
-config.json (PAPERCLIP_CONFIG または ~/.paperclip/instances/default/config.json)
+config.json（PAPERCLIP_CONFIG 或 ~/.paperclip/instances/default/config.json）
     │
     ▼
-デフォルト値 (最低優先)
+預設值（最低優先）
 ```
 
-`server/src/config.ts:loadConfig()` が全設定を統合して `Config` オブジェクトを返す。
+`server/src/config.ts:loadConfig()` 整合所有設定並回傳 `Config` 物件。
 
 ---
 
-## 主要環境変数一覧
+## 主要環境變數清單
 
-### サーバー・デプロイ
+### 伺服器・部署
 
-| 変数名 | デフォルト | 説明 |
+| 變數名 | 預設值 | 說明 |
 |-------|----------|------|
-| `PORT` | `3100` | HTTP サーバーポート |
-| `HOST` | `127.0.0.1` | バインドホスト |
-| `PAPERCLIP_DEPLOYMENT_MODE` | `local_trusted` | `local_trusted` or `authenticated` |
-| `PAPERCLIP_DEPLOYMENT_EXPOSURE` | `private` | `private` or `public` |
-| `PAPERCLIP_BIND` | （HOST から推論） | `loopback` / `lan` / `tailnet` / `custom` |
-| `SERVE_UI` | `false` | `true` でビルド済み UI を serve |
-| `PAPERCLIP_HOME` | `~/.paperclip` | データホームディレクトリ |
-| `PAPERCLIP_INSTANCE_ID` | `default` | インスタンス識別子（複数インスタンス共存用） |
-| `PAPERCLIP_ALLOWED_HOSTNAMES` | - | カンマ区切りの許可ホスト名 |
-| `PAPERCLIP_PUBLIC_URL` | - | 公開 URL（認証コールバック用） |
+| `PORT` | `3100` | HTTP 伺服器埠號 |
+| `HOST` | `127.0.0.1` | 綁定主機 |
+| `PAPERCLIP_DEPLOYMENT_MODE` | `local_trusted` | `local_trusted` 或 `authenticated` |
+| `PAPERCLIP_DEPLOYMENT_EXPOSURE` | `private` | `private` 或 `public` |
+| `PAPERCLIP_BIND` | （由 HOST 推斷） | `loopback` / `lan` / `tailnet` / `custom` |
+| `SERVE_UI` | `false` | 設為 `true` 以提供已建置的 UI |
+| `PAPERCLIP_HOME` | `~/.paperclip` | 資料主目錄 |
+| `PAPERCLIP_INSTANCE_ID` | `default` | 執行個體識別子（多執行個體共存用） |
+| `PAPERCLIP_ALLOWED_HOSTNAMES` | - | 逗號分隔的允許主機名稱清單 |
+| `PAPERCLIP_PUBLIC_URL` | - | 公開 URL（驗證 callback 用） |
 
-### 認証
+### 驗證
 
-| 変数名 | デフォルト | 説明 |
+| 變數名 | 預設值 | 說明 |
 |-------|----------|------|
-| `BETTER_AUTH_SECRET` | - | セッション HMAC シークレット（必須: `authenticated` モード） |
-| `PAPERCLIP_AUTH_DISABLE_SIGN_UP` | `false` | サインアップ無効化 |
-| `PAPERCLIP_AUTH_PUBLIC_BASE_URL` | - | 認証ベース URL |
+| `BETTER_AUTH_SECRET` | - | Session HMAC secret（`authenticated` 模式必填） |
+| `PAPERCLIP_AUTH_DISABLE_SIGN_UP` | `false` | 停用註冊功能 |
+| `PAPERCLIP_AUTH_PUBLIC_BASE_URL` | - | 驗證基底 URL |
 
-### データベース
+### 資料庫
 
-| 変数名 | デフォルト | 説明 |
+| 變數名 | 預設值 | 說明 |
 |-------|----------|------|
-| `DATABASE_URL` | （未設定→embedded postgres） | 外部 Postgres 接続文字列 |
-| `PAPERCLIP_DB_BACKUP_ENABLED` | `true` | 自動バックアップ有効/無効 |
-| `PAPERCLIP_DB_BACKUP_INTERVAL_MINUTES` | `60` | バックアップ間隔（分） |
-| `PAPERCLIP_DB_BACKUP_RETENTION_DAYS` | `30` | バックアップ保持日数 |
-| `PAPERCLIP_DB_BACKUP_DIR` | `~/.paperclip/.../backups` | バックアップ保存先 |
-| `PAPERCLIP_MIGRATION_AUTO_APPLY` | `true` (non-TTY) | マイグレーション自動適用 |
+| `DATABASE_URL` | （未設定 → embedded postgres） | 外部 Postgres 連線字串 |
+| `PAPERCLIP_DB_BACKUP_ENABLED` | `true` | 自動備份啟用/停用 |
+| `PAPERCLIP_DB_BACKUP_INTERVAL_MINUTES` | `60` | 備份間隔（分鐘） |
+| `PAPERCLIP_DB_BACKUP_RETENTION_DAYS` | `30` | 備份保留天數 |
+| `PAPERCLIP_DB_BACKUP_DIR` | `~/.paperclip/.../backups` | 備份儲存位置 |
+| `PAPERCLIP_MIGRATION_AUTO_APPLY` | `true`（非 TTY 時） | 自動套用 migration |
 
-### シークレット管理
+### Secret 管理
 
-| 変数名 | デフォルト | 説明 |
+| 變數名 | 預設值 | 說明 |
 |-------|----------|------|
-| `PAPERCLIP_SECRETS_PROVIDER` | `local_encrypted` | `local_encrypted` or `plain_text` |
-| `PAPERCLIP_SECRETS_STRICT_MODE` | `false` | sensitive 変数の secret ref 強制 |
-| `PAPERCLIP_SECRETS_MASTER_KEY` | - | 暗号化マスターキー（直接指定） |
-| `PAPERCLIP_SECRETS_MASTER_KEY_FILE` | `~/.paperclip/.../secrets/master.key` | キーファイルパス |
+| `PAPERCLIP_SECRETS_PROVIDER` | `local_encrypted` | `local_encrypted` 或 `plain_text` |
+| `PAPERCLIP_SECRETS_STRICT_MODE` | `false` | 強制敏感變數使用 secret ref |
+| `PAPERCLIP_SECRETS_MASTER_KEY` | - | 加密主金鑰（直接指定） |
+| `PAPERCLIP_SECRETS_MASTER_KEY_FILE` | `~/.paperclip/.../secrets/master.key` | 金鑰檔路徑 |
 
-### ストレージ
+### Storage
 
-| 変数名 | デフォルト | 説明 |
+| 變數名 | 預設值 | 說明 |
 |-------|----------|------|
-| `PAPERCLIP_STORAGE_PROVIDER` | `local_disk` | `local_disk` or `s3` |
-| `PAPERCLIP_STORAGE_LOCAL_DIR` | `~/.paperclip/.../data/storage` | ローカルストレージパス |
-| `PAPERCLIP_STORAGE_S3_BUCKET` | `paperclip` | S3 バケット名 |
-| `PAPERCLIP_STORAGE_S3_REGION` | `us-east-1` | S3 リージョン |
-| `PAPERCLIP_STORAGE_S3_ENDPOINT` | - | S3 互換エンドポイント URL |
-| `PAPERCLIP_STORAGE_S3_FORCE_PATH_STYLE` | `false` | パススタイル URL 強制 |
+| `PAPERCLIP_STORAGE_PROVIDER` | `local_disk` | `local_disk` 或 `s3` |
+| `PAPERCLIP_STORAGE_LOCAL_DIR` | `~/.paperclip/.../data/storage` | 本機 storage 路徑 |
+| `PAPERCLIP_STORAGE_S3_BUCKET` | `paperclip` | S3 bucket 名稱 |
+| `PAPERCLIP_STORAGE_S3_REGION` | `us-east-1` | S3 區域 |
+| `PAPERCLIP_STORAGE_S3_ENDPOINT` | - | S3 相容端點 URL |
+| `PAPERCLIP_STORAGE_S3_FORCE_PATH_STYLE` | `false` | 強制使用路徑風格 URL |
 
-### テレメトリ
+### Telemetry
 
-| 変数名 | 説明 |
+| 變數名 | 說明 |
 |-------|------|
-| `PAPERCLIP_TELEMETRY_DISABLED=1` | テレメトリ無効化 |
-| `DO_NOT_TRACK=1` | 標準的な無効化方法 |
-| `CI=true` | CI 環境では自動無効 |
+| `PAPERCLIP_TELEMETRY_DISABLED=1` | 停用 telemetry |
+| `DO_NOT_TRACK=1` | 標準停用方式 |
+| `CI=true` | CI 環境自動停用 |
 
-### エージェント・コスト制御
+### 代理程式・成本控制
 
-| 変数名 | デフォルト | 説明 |
+| 變數名 | 預設值 | 說明 |
 |-------|----------|------|
-| `PAPERCLIP_ENABLE_COMPANY_DELETION` | `local_trusted`: true | 会社削除の有効/無効 |
-| `OPENCODE_ALLOW_ALL_MODELS` | - | OpenCode で全モデルを許可 |
+| `PAPERCLIP_ENABLE_COMPANY_DELETION` | `local_trusted`: true | 公司刪除的啟用/停用 |
+| `OPENCODE_ALLOW_ALL_MODELS` | - | OpenCode 中允許所有模型 |
 
-### Worktree（ローカル開発）
+### Worktree（本機開發）
 
-| 変数名 | 説明 |
+| 變數名 | 說明 |
 |-------|------|
-| `PAPERCLIP_IN_WORKTREE=true` | worktree 内での実行を示す |
-| `PAPERCLIP_WORKTREE_NAME` | worktree の表示名（UI バナー用） |
-| `PAPERCLIP_WORKTREE_COLOR` | worktree の識別色（Hex） |
+| `PAPERCLIP_IN_WORKTREE=true` | 表示在 worktree 內執行 |
+| `PAPERCLIP_WORKTREE_NAME` | worktree 的顯示名稱（UI banner 用） |
+| `PAPERCLIP_WORKTREE_COLOR` | worktree 的識別顏色（Hex） |
 
 ---
 
-## config.json 構造
+## config.json 結構
 
-`~/.paperclip/instances/default/config.json` の主要セクション：
+`~/.paperclip/instances/default/config.json` 的主要區段：
 
 ```json
 {
@@ -147,43 +147,43 @@ config.json (PAPERCLIP_CONFIG または ~/.paperclip/instances/default/config.js
 
 ---
 
-## データディレクトリ構造
+## 資料目錄結構
 
 ```
-PAPERCLIP_HOME/                        # デフォルト: ~/.paperclip
+PAPERCLIP_HOME/                        # 預設：~/.paperclip
 └── instances/
-    └── PAPERCLIP_INSTANCE_ID/         # デフォルト: default
-        ├── config.json                # インスタンス設定
-        ├── db/                        # Embedded PostgreSQL データ
+    └── PAPERCLIP_INSTANCE_ID/         # 預設：default
+        ├── config.json                # 執行個體設定
+        ├── db/                        # Embedded PostgreSQL 資料
         ├── secrets/
-        │   └── master.key             # ローカル暗号化マスターキー
+        │   └── master.key             # 本機加密主金鑰
         ├── data/
-        │   ├── storage/               # ローカルファイルストレージ
-        │   └── backups/               # DB バックアップ
+        │   ├── storage/               # 本機檔案 storage
+        │   └── backups/               # DB 備份
         └── workspaces/
-            └── <agent-id>/            # エージェントデフォルトワークスペース
+            └── <agent-id>/            # 代理程式預設 workspace
 
-~/.paperclip-worktrees/               # Worktree 用分離インスタンス
+~/.paperclip-worktrees/               # Worktree 用的隔離執行個體
 └── instances/
     └── <worktree-id>/
-        ├── ...（同構造）
+        ├── ...（相同結構）
 ```
 
 ---
 
-## Feature Flag / 実験的設定
+## Feature Flag / 實驗性設定
 
-`server/src/services/instance-settings.ts` が管理：
+由 `server/src/services/instance-settings.ts` 管理：
 
-- `censorUsernameInLogs`: ログ内のユーザー名マスキング
-- 実験的設定は `InstanceExperimentalSettings.tsx` ページから設定可能
-- `PAPERCLIP_IN_WORKTREE` での guarded auto-restart 機能
+- `censorUsernameInLogs`：遮蔽日誌中的使用者名稱
+- 實驗性設定可透過 `InstanceExperimentalSettings.tsx` 頁面進行設定
+- `PAPERCLIP_IN_WORKTREE` 的受保護自動重新啟動功能
 
 ---
 
-## Secret 参照形式
+## Secret 參照格式
 
-エージェント環境変数でシークレットを参照する際：
+在代理程式環境變數中參照 secret 時：
 
 ```json
 {
@@ -195,4 +195,4 @@ PAPERCLIP_HOME/                        # デフォルト: ~/.paperclip
 }
 ```
 
-`strict` モードでは `SENSITIVE_ENV_KEY_RE` パターンにマッチするキー（`*_API_KEY`, `*_TOKEN`, `*_SECRET` 等）を plain text で設定しようとするとエラー。
+在 `strict` 模式下，若嘗試以 plain text 設定符合 `SENSITIVE_ENV_KEY_RE` 模式的 key（`*_API_KEY`、`*_TOKEN`、`*_SECRET` 等），將會回傳錯誤。

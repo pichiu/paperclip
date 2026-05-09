@@ -1,125 +1,125 @@
 # 外部整合（Integrations）
 
-## 1. エージェントランタイム（最大の外部依存）
+## 1. 代理程式 Runtime（最大的外部依賴）
 
-### Claude Code (Anthropic)
+### Claude Code（Anthropic）
 
-- **アダプター**: `packages/adapters/claude-local/`
-- **接続方式**: ローカル `claude` CLI を子プロセスとして起動
-- **認証**: `ANTHROPIC_API_KEY` または Claude Code セッション
-- **セッション継続**: `claude --resume <sessionId>` で前のセッションから再開
-- **モデル**: claude-opus-4-7, claude-sonnet-4-6, claude-haiku-4-6 等
+- **Adapter**：`packages/adapters/claude-local/`
+- **連線方式**：以子程序啟動本機 `claude` CLI
+- **驗證**：`ANTHROPIC_API_KEY` 或 Claude Code session
+- **Session 連續性**：以 `claude --resume <sessionId>` 從前次 session 繼續執行
+- **模型**：claude-opus-4-7、claude-sonnet-4-6、claude-haiku-4-6 等
 
-**障害処理**:
-- `isClaudeTransientUpstreamError()` で一時的エラーを検出 → bounded retry（`BOUNDED_TRANSIENT_HEARTBEAT_RETRY_DELAYS_MS`）
-- `isClaudeMaxTurnsResult()` → max_turns_continuation で次のハートビートに継続
-- `detectClaudeLoginRequired()` → ログイン必要状態を検出して Board に通知
+**錯誤處理**：
+- `isClaudeTransientUpstreamError()` 偵測暫時性錯誤 → bounded retry（`BOUNDED_TRANSIENT_HEARTBEAT_RETRY_DELAYS_MS`）
+- `isClaudeMaxTurnsResult()` → 以 max_turns_continuation 繼續至下一次 heartbeat
+- `detectClaudeLoginRequired()` → 偵測需要登入的狀態並通知 Board
 
 ### OpenClaw Gateway
 
-- **アダプター**: `packages/adapters/openclaw-gateway/`
-- **接続方式**: WebSocket over HTTPS（`wss://...`）
-- **認証**: Device Identity (ECDH keypair) — `deviceId` + 公開鍵を OpenClaw に登録
-- **プロトコル**: JSON-RPC スタイルのリクエスト/レスポンスフレーム
-- **起動方式**: Fire-and-forget（Webhook）ではなく、常時接続 WebSocket でコールバックを待つ
+- **Adapter**：`packages/adapters/openclaw-gateway/`
+- **連線方式**：WebSocket over HTTPS（`wss://...`）
+- **驗證**：Device Identity（ECDH keypair）— 將 `deviceId` 與公鑰註冊至 OpenClaw
+- **協定**：JSON-RPC 風格的請求/回應框架
+- **啟動方式**：非 Fire-and-forget（Webhook），而是常時連線 WebSocket 等待 callback
 
-**障害処理**:
-- WebSocket 切断時に再接続リトライ
-- タイムアウト設定あり（`request timeout`）
-- `pendingRequest` Map でリクエストの応答を追跡
+**錯誤處理**：
+- WebSocket 中斷時進行重連重試
+- 有逾時設定（`request timeout`）
+- 以 `pendingRequest` Map 追蹤請求的回應
 
 ### Codex / Gemini / OpenCode / Pi / Cursor
 
-同様のパターン（CLI 子プロセス起動）。各アダプターが CLI の stdout/stderr をパースしてトークン使用量・実行結果を取得。
+相同模式（CLI 子程序啟動）。各 adapter 解析 CLI 的 stdout/stderr 以取得 token 使用量與執行結果。
 
 ---
 
-## 2. PostgreSQL（組み込み or 外部）
+## 2. PostgreSQL（內嵌或外部）
 
-- **パッケージ**: `embedded-postgres@18.1.0-beta.16`（パッチ済み）
-- **接続**: `DATABASE_URL` 環境変数で外部 Postgres に切り替え可能
-- **ORM**: Drizzle ORM
-- **マイグレーション**: `packages/db/src/migrations/` に SQL ファイル
+- **套件**：`embedded-postgres@18.1.0-beta.16`（已修補）
+- **連線**：透過 `DATABASE_URL` 環境變數可切換至外部 Postgres
+- **ORM**：Drizzle ORM
+- **Migration**：SQL 檔案位於 `packages/db/src/migrations/`
 
-**接続ライフサイクル**:
-1. `server/src/index.ts` の `startServer()` でインスタンス起動（または外部接続）
-2. `applyPendingMigrations()` で未適用マイグレーションを適用
-3. `createDb(url)` で Drizzle ORM インスタンス生成
-
----
-
-## 3. Better Auth（認証）
-
-- **パッケージ**: `better-auth`
-- **モード**: `authenticated` デプロイモードでのみ使用
-- **提供機能**: セッション管理、ユーザー登録/ログイン、Cookie ベース認証
-- **設定**: `BETTER_AUTH_SECRET` 環境変数（HMAC シークレット）
-- **エンドポイント**: `/api/auth/*` 以下すべて
+**連線生命週期**：
+1. 在 `server/src/index.ts` 的 `startServer()` 中啟動實例（或建立外部連線）
+2. 以 `applyPendingMigrations()` 套用尚未執行的 migration
+3. 以 `createDb(url)` 建立 Drizzle ORM 實例
 
 ---
 
-## 4. Object Storage（ファイル添付・ワーク成果物）
+## 3. Better Auth（驗證）
 
-**`server/src/storage/`**:
+- **套件**：`better-auth`
+- **模式**：僅在 `authenticated` 部署模式下使用
+- **提供功能**：session 管理、使用者註冊/登入、Cookie 驗證
+- **設定**：`BETTER_AUTH_SECRET` 環境變數（HMAC secret）
+- **端點**：`/api/auth/*` 以下的所有路徑
 
-| プロバイダー | 設定 | 用途 |
+---
+
+## 4. Object Storage（檔案附件・作業成果）
+
+**`server/src/storage/`**：
+
+| 提供者 | 設定 | 用途 |
 |----------|-----|-----|
-| `local_disk` | `PAPERCLIP_STORAGE_DIR` | ローカル開発・自己ホスト |
-| `s3` | `STORAGE_S3_BUCKET` 等 | 本番 S3 互換ストレージ |
+| `local_disk` | `PAPERCLIP_STORAGE_DIR` | 本機開發・自架伺服器 |
+| `s3` | `STORAGE_S3_BUCKET` 等 | 正式環境 S3 相容儲存 |
 
-`StorageService` インターフェース:
-- `put(key, buffer, contentType)` — ファイルアップロード
-- `get(key)` — ファイル取得
-- `delete(key)` — ファイル削除
-- `getSignedUrl(key, expiry)` — 署名付き URL 生成
+`StorageService` 介面：
+- `put(key, buffer, contentType)` — 上傳檔案
+- `get(key)` — 取得檔案
+- `delete(key)` — 刪除檔案
+- `getSignedUrl(key, expiry)` — 產生簽署 URL
 
 ---
 
 ## 5. Telemetry（匿名使用統計）
 
 - **`server/src/telemetry.ts`**
-- **送信内容**: 匿名の使用パターン（プロジェクト名はハッシュ化）
-- **除外対象**: 個人情報・Issue 内容・プロンプト・ファイルパス・シークレット
-- **無効化**:
+- **傳送內容**：匿名的使用模式（專案名稱已雜湊化）
+- **排除項目**：個人資訊・Issue 內容・prompt・檔案路徑・secret
+- **停用方式**：
   - `PAPERCLIP_TELEMETRY_DISABLED=1`
   - `DO_NOT_TRACK=1`
-  - `CI=true` (自動無効)
-  - config file で `telemetry.enabled: false`
+  - `CI=true`（自動停用）
+  - 在 config 檔設定 `telemetry.enabled: false`
 
 ---
 
 ## 6. GitHub Integration
 
-`server/src/services/github-fetch.ts`:
-- GitHub API 呼び出し（PR 情報取得等）
-- ⚠️ 主な用途は未確認（内部ドキュメントには PR レビューツールは Paperclip の役割外と明記）
+`server/src/services/github-fetch.ts`：
+- 呼叫 GitHub API（取得 PR 資訊等）
+- ⚠️ 主要用途尚未確認（內部文件明確指出 PR review 工具不在 Paperclip 的職責範圍內）
 
 ---
 
 ## 7. MCP Server
 
-`packages/mcp-server/`:
-- Paperclip のデータを MCP (Model Context Protocol) サーバーとして公開
-- これにより、Claude Code 等の MCP 対応エージェントが Paperclip のデータを直接ツールとして利用可能
+`packages/mcp-server/`：
+- 將 Paperclip 的資料以 MCP（Model Context Protocol）server 形式公開
+- 讓 Claude Code 等支援 MCP 的代理程式可直接將 Paperclip 的資料作為 tool 使用
 
 ---
 
 ## 8. Feedback / Trace Share
 
-`server/src/services/feedback-share-client.ts`:
-- フィードバックの匿名共有機能
-- フラッシュ間隔: 5,000ms (`FEEDBACK_EXPORT_FLUSH_INTERVAL_MS`)
+`server/src/services/feedback-share-client.ts`：
+- 匿名回饋共享功能
+- 排程間隔：5,000ms（`FEEDBACK_EXPORT_FLUSH_INTERVAL_MS`）
 
 ---
 
-## 9. エラーハンドリングパターン
+## 9. 錯誤處理模式
 
-| シナリオ | 処理方法 |
+| 情境 | 處理方式 |
 |---------|---------|
-| Claude 一時エラー | bounded retry（指数バックオフ）|
-| 予算超過 | エージェント停止、Board に通知 |
-| エージェント応答なし | Watchdog が検出、recovery issue 自動作成 |
-| DB 接続失敗 | サーバー起動拒否（fail-fast） |
-| プラグインクラッシュ | ワーカープロセス再起動（他に影響なし） |
-| ストレージエラー | エラーレスポンス返却（キャッチ後ログ） |
-| Webhook タイムアウト | タイムアウト設定後エラー記録 |
+| Claude 暫時性錯誤 | bounded retry（指數退避） |
+| Budget 超支 | 停止代理程式，通知 Board |
+| 代理程式無回應 | Watchdog 偵測，自動建立 recovery issue |
+| DB 連線失敗 | 拒絕伺服器啟動（fail-fast） |
+| Plugin 崩潰 | 重新啟動 worker process（不影響其他部分） |
+| Storage 錯誤 | 回傳錯誤回應（捕捉後記錄日誌） |
+| Webhook 逾時 | 設定逾時後記錄錯誤 |

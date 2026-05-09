@@ -1,91 +1,91 @@
-# Data Flow — 代表的ユースケース：Issue の Checkout とエージェント実行
+# Data Flow — 代表性使用案例：Issue 的 Checkout 與代理程式執行
 
-## ユースケース概要
+## 使用案例概要
 
-「エージェントが Issue (タスク) を checkout し、ハートビートを通じて実際に作業を実行するまで」の完全なデータフロー。
+「代理程式將 Issue（任務）checkout 後，透過 heartbeat 實際執行作業」的完整資料流程。
 
 ---
 
-## フロー全体図
+## 整體流程圖
 
 ```
 HTTP Client (Board UI / Agent)
     │
     ▼
-actorMiddleware              # 認証・アクター識別
+actorMiddleware              # 驗證・actor 識別
     │
     ▼
 POST /api/issues/:id/checkout
     │
     ▼
-issueService.checkout()      # 楽観ロック付きの Issue チェックアウト
+issueService.checkout()      # 附樂觀鎖的 Issue checkout
     │
-    ▼ (assignee が agent の場合)
-heartbeatService.wakeup()    # エージェントウェイクアップキュー
-    │
-    ▼
-enqueueWakeup()              # agentWakeupRequests テーブルに挿入
+    ▼ (assignee 為 agent 時)
+heartbeatService.wakeup()    # 代理程式喚醒佇列
     │
     ▼
-heartbeat timer loop         # 定期的なキュードレイン
+enqueueWakeup()              # 插入 agentWakeupRequests 資料表
     │
     ▼
-budgetService.getInvocationBlock()   # 予算チェック
+heartbeat timer loop         # 定期清空佇列
     │
     ▼
-secretService.inject()       # シークレット注入
+budgetService.getInvocationBlock()   # budget 檢查
     │
     ▼
-getServerAdapter()           # アダプター選択 (claude_local等)
+secretService.inject()       # secret 注入
     │
     ▼
-adapter.execute()            # 実際のエージェント実行
+getServerAdapter()           # adapter 選擇（claude_local 等）
     │
     ▼
-heartbeatRuns テーブル更新 (status: running → completed/failed)
+adapter.execute()            # 實際代理程式執行
     │
     ▼
-costService.record()         # トークンコスト記録
+heartbeatRuns 資料表更新 (status: running → completed/failed)
     │
     ▼
-activity logActivity()       # 監査ログ記録
+costService.record()         # token 成本記錄
     │
     ▼
-publishLiveEvent()           # WebSocket で Board UI にプッシュ
+activity logActivity()       # 稽核日誌記錄
+    │
+    ▼
+publishLiveEvent()           # 透過 WebSocket 推送至 Board UI
 ```
 
 ---
 
-## Step 1: 認証・アクター識別 (`server/src/middleware/auth.ts`)
+## Step 1：驗證・Actor 識別（`server/src/middleware/auth.ts`）
 
-`actorMiddleware` が実行され、リクエストを発したアクターを識別：
+執行 `actorMiddleware`，識別發出請求的 actor：
 
-| ソース | アクター型 |
-|-------|----------|
-| `local_trusted` モード | 常に `board` ユーザー（認証不要） |
-| `Authorization: Bearer <jwt>` | エージェントの短命 JWT (`agent` 型) |
-| `Authorization: Bearer <api-key>` | Agent API Key (`agent` 型) または Board API Key |
-| Cookie セッション | Better Auth セッション (`user` 型) |
+| 來源 | Actor 型別 |
+|------|-----------|
+| `local_trusted` 模式 | 固定為 `board` 使用者（無需驗證） |
+| `Authorization: Bearer <jwt>` | 代理程式短命 JWT（`agent` 型） |
+| `Authorization: Bearer <api-key>` | Agent API Key（`agent` 型）或 Board API Key |
+| Cookie session | Better Auth session（`user` 型） |
 
-`req.actor` オブジェクトにアクター情報をセット。
+將 actor 資訊設定至 `req.actor` 物件。
 
 ---
 
-## Step 2: Issue チェックアウト (`server/src/routes/issues.ts:2911`)
+## Step 2：Issue Checkout（`server/src/routes/issues.ts:2911`）
 
 ```
 POST /api/issues/:id/checkout
 Body: { agentId, expectedStatuses }
 ```
 
-### バリデーション
-- `validate(checkoutIssueSchema)` — Zod スキーマによる入力バリデーション
-- `assertCompanyAccess(req, companyId)` — アクターが対象会社にアクセス可能か確認
-- プロジェクトが pause 中でないか確認
+### 驗證
+- `validate(checkoutIssueSchema)` — 以 Zod schema 進行輸入驗證
+- `assertCompanyAccess(req, companyId)` — 確認 actor 是否可存取目標公司
+- 確認專案未處於暫停狀態
 
-### 楽観ロック付き checkout (`issueService.checkout()`)
+### 附樂觀鎖的 checkout（`issueService.checkout()`）
 
-`server/src/services/issues.ts` にて：
+位於 `server/src/services/issues.ts`：
 
 ```sql
 UPDATE issues
@@ -94,96 +94,96 @@ SET
   checkout_run_id = :runId,
   execution_locked_at = NOW()
 WHERE id = :issueId
-  AND status = ANY(:expectedStatuses)  -- 楽観ロック
+  AND status = ANY(:expectedStatuses)  -- 樂觀鎖
 RETURNING *
 ```
 
-`expectedStatuses` が合わない（他のエージェントが先に取得した）場合は `409 Conflict` を返す。
+若 `expectedStatuses` 不符（其他代理程式已搶先取得），則回傳 `409 Conflict`。
 
-### アクティビティログ
-`logActivity(db, { action: "issue.checked_out", ... })` → `activity_log` テーブル挿入
+### 活動日誌
+`logActivity(db, { action: "issue.checked_out", ... })` → 插入 `activity_log` 資料表
 
 ---
 
-## Step 3: エージェントウェイクアップ (`enqueueWakeup`)
+## Step 3：代理程式喚醒（`enqueueWakeup`）
 
 `server/src/services/heartbeat.ts:7834`
 
-1. **予算ブロックチェック**: `budgets.getInvocationBlock()` 
-   - エージェント/プロジェクト/会社レベルの月次/生涯予算ポリシーを確認
-   - ブロックの場合 → `agentWakeupRequests` に `status: skipped` で記録、`409` エラー
-2. **エージェント状態チェック**: `agent.status` が `paused/terminated/pending_approval` なら同様にスキップ
-3. **DB トランザクション内で**:
-   - `heartbeatRuns` テーブルに `status: queued` で新規ラン挿入
-   - `agentWakeupRequests` テーブルに記録
-   - `issues` の `execution_run_id` を更新（実行ロック）
+1. **Budget 封鎖檢查**：`budgets.getInvocationBlock()`
+   - 確認代理程式/專案/公司層級的月結/終身 budget policy
+   - 若被封鎖 → 以 `status: skipped` 記錄至 `agentWakeupRequests`，回傳 `409` 錯誤
+2. **代理程式狀態檢查**：若 `agent.status` 為 `paused/terminated/pending_approval`，同樣略過
+3. **在 DB transaction 內**：
+   - 以 `status: queued` 將新執行記錄插入 `heartbeatRuns` 資料表
+   - 記錄至 `agentWakeupRequests` 資料表
+   - 更新 `issues` 的 `execution_run_id`（執行鎖定）
 
 ---
 
-## Step 4: ハートビートスケジューラーのキュードレイン
+## Step 4：Heartbeat 排程器的佇列清空
 
-`server/src/services/heartbeat.ts` の内部ループが定期的（またはウェイクアップリクエスト受信時）に：
+`server/src/services/heartbeat.ts` 的內部迴圈定期（或收到喚醒請求時）執行：
 
-1. `heartbeatRuns` から `status: queued` のランを取得
-2. `budgets.getInvocationBlock()` で再度予算確認
-3. `secretService.inject()` でエージェント設定の secret refs を実値に展開
-4. `companySkillService.getSkillsForAgent()` でエージェントのスキルを取得
-5. `realizeExecutionWorkspace()` でワークスペース解決（git worktree, CWD 等）
-6. `buildPaperclipWakePayload()` でエージェントへ渡す完全なコンテキストペイロードを構築
-7. `getServerAdapter(adapterType).execute(context)` で実際のアダプターを呼び出す
-
----
-
-## Step 5: アダプター実行 (`packages/adapters/claude-local/src/server/execute.ts`)
-
-`execute(context: AdapterExecutionContext)` が呼ばれる：
-
-1. **コマンド解決**: `claude` CLI のパス解決
-2. **セッション状態**: 既存セッション ID から継続実行、または新規セッション
-3. **プロンプトバンドル構築**: `buildPaperclipWakePayload` で生成されたペイロードを `--prompt` に渡す
-4. **環境変数注入**: シークレット、APIキー、ワークスペースパス等
-5. **子プロセス起動**: `child_process.spawn("claude", args, { cwd, env })`
-6. **stdout/stderr ストリーム処理**:
-   - ログを `heartbeatRunEvents` テーブルにリアルタイム挿入
-   - 同時にログファイルにも書き出す（`run-log-store.ts`）
-7. **完了後**: `AdapterExecutionResult` を返す（exitCode, usageSummary 等）
+1. 從 `heartbeatRuns` 取得 `status: queued` 的執行記錄
+2. 再次以 `budgets.getInvocationBlock()` 確認 budget
+3. 以 `secretService.inject()` 將代理程式設定中的 secret 參照展開為實際值
+4. 以 `companySkillService.getSkillsForAgent()` 取得代理程式的 skill
+5. 以 `realizeExecutionWorkspace()` 解析 workspace（git worktree、CWD 等）
+6. 以 `buildPaperclipWakePayload()` 建構傳遞給代理程式的完整 context payload
+7. 以 `getServerAdapter(adapterType).execute(context)` 呼叫實際的 adapter
 
 ---
 
-## Step 6: ラン完了処理
+## Step 5：Adapter 執行（`packages/adapters/claude-local/src/server/execute.ts`）
 
-1. `heartbeatRuns.status` を `running` → `completed` / `failed` に更新
-2. `costService.record()` — トークン使用量を `cost_events` テーブルに記録
-3. `issues.executionRunId` をクリア（実行ロック解除）
-4. `publishLiveEvent("heartbeat_run_updated", ...)` — WebSocket 経由で UI に通知
-5. `budgets.recordCost()` — 予算ポリシーの累積コスト更新、ハードストップ確認
+呼叫 `execute(context: AdapterExecutionContext)`：
+
+1. **指令解析**：解析 `claude` CLI 的路徑
+2. **Session 狀態**：從既有 session ID 繼續執行，或建立新 session
+3. **Prompt bundle 建構**：將 `buildPaperclipWakePayload` 產生的 payload 傳入 `--prompt`
+4. **環境變數注入**：secret、API key、workspace 路徑等
+5. **子程序啟動**：`child_process.spawn("claude", args, { cwd, env })`
+6. **stdout/stderr 串流處理**：
+   - 即時將日誌插入 `heartbeatRunEvents` 資料表
+   - 同時寫出至日誌檔（`run-log-store.ts`）
+7. **完成後**：回傳 `AdapterExecutionResult`（exitCode、usageSummary 等）
 
 ---
 
-## 補足：エージェントから Paperclip API を呼ぶ逆方向のフロー
+## Step 6：執行完成處理
 
-実行中のエージェント（例: Claude Code）は、短命 JWT（`createLocalAgentJwt`）を使って Paperclip API を呼び戻す：
+1. 將 `heartbeatRuns.status` 從 `running` 更新為 `completed` / `failed`
+2. `costService.record()` — 將 token 使用量記錄至 `cost_events` 資料表
+3. 清除 `issues.executionRunId`（解除執行鎖定）
+4. `publishLiveEvent("heartbeat_run_updated", ...)` — 透過 WebSocket 通知 UI
+5. `budgets.recordCost()` — 更新 budget policy 的累積成本，確認是否觸發強制停止
+
+---
+
+## 補充：代理程式回呼 Paperclip API 的反向流程
+
+執行中的代理程式（例如 Claude Code）使用短命 JWT（`createLocalAgentJwt`）回呼 Paperclip API：
 
 ```
-GET  /api/issues/:id/heartbeat-context  # 現在のタスクコンテキスト取得
-POST /api/issues/:id/comments           # コメント投稿
-PATCH /api/issues/:id                   # ステータス更新
-POST /api/issues/:id/children           # 子タスク作成
-POST /api/issues/:id/checkout           # タスクをエージェントがチェックアウト
-POST /api/issues/:id/release            # タスクを解放
+GET  /api/issues/:id/heartbeat-context  # 取得目前任務的 context
+POST /api/issues/:id/comments           # 發佈留言
+PATCH /api/issues/:id                   # 更新狀態
+POST /api/issues/:id/children           # 建立子任務
+POST /api/issues/:id/checkout           # 代理程式 checkout 任務
+POST /api/issues/:id/release            # 釋放任務
 ```
 
-この JWT は `server/src/agent-auth-jwt.ts` で生成・検証されており、有効期限は短い（ランのライフタイムのみ）。
+此 JWT 由 `server/src/agent-auth-jwt.ts` 產生與驗證，有效期限短暫（僅限執行期間）。
 
 ---
 
-## データ変換サマリー
+## 資料轉換摘要
 
-| 層 | 変換内容 |
+| 層 | 轉換內容 |
 |---|---------|
-| HTTP Routing | パスパラメータ展開 + Zod バリデーション |
-| Middleware | アクター識別 → `req.actor` |
-| Service層 | ビジネスルール（状態遷移・楽観ロック）、Drizzle ORM によるDB操作 |
-| Adapter層 | Paperclip コンテキスト → エージェント CLI コマンド |
-| エージェント実行 | Claude Code がプロンプトを受け取り、Paperclip Skill経由でAPI操作 |
-| 完了後 | 使用量・コスト・ログ → DB への永続化 + WebSocket プッシュ |
+| HTTP Routing | 路徑參數展開 + Zod 驗證 |
+| Middleware | Actor 識別 → `req.actor` |
+| Service 層 | 商業規則（狀態轉換・樂觀鎖）、透過 Drizzle ORM 操作 DB |
+| Adapter 層 | Paperclip context → 代理程式 CLI 指令 |
+| 代理程式執行 | Claude Code 接收 prompt，透過 Paperclip Skill 操作 API |
+| 完成後 | 使用量・成本・日誌 → 持久化至 DB + WebSocket 推送 |
