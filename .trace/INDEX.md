@@ -1,70 +1,70 @@
-# Paperclip — プロジェクト総覧
+# Paperclip — 專案總覽
 
-## 一言サマリー
+## 一句話摘要
 
-**Paperclip** は、AI エージェント（Claude Code、Codex、OpenClaw 等）をひとつの「会社」として組織化・運営するオープンソースの Control Plane。「エージェントは従業員、Paperclip は会社」というコンセプトで、組織図・ゴール・予算・ガバナンス・タスク管理を提供し、複数の異種エージェントを協調動作させる。
+**Paperclip** 是一個開源的 Control Plane，用於將 AI agent（Claude Code、Codex、OpenClaw 等）組織化並以「公司」形式運營。以「agent 是員工、Paperclip 是公司」為核心概念，提供組織架構、目標、budget、governance 與任務管理，讓多種異質 agent 協同運作。
 
 ---
 
-## 技術スタック総覧
+## 技術堆疊總覽
 
-| カテゴリ | 技術 | バージョン | 用途 |
-|---------|------|-----------|------|
-| Runtime | Node.js | ≥20 | サーバー実行環境 |
+| 類別 | 技術 | 版本 | 用途 |
+|------|------|------|------|
+| Runtime | Node.js | ≥20 | 伺服器執行環境 |
 | Package Manager | pnpm | 9.15.4 | Monorepo 管理 |
-| Backend Framework | Express.js | 4.x | HTTP API サーバー |
-| Frontend Framework | React | 18.x | ダッシュボード UI |
-| Build Tool (UI) | Vite | - | フロントエンドビルド |
-| ORM | Drizzle ORM | ^0.38.4 | DB スキーマ・クエリ |
-| Database | PostgreSQL (embedded) | 18.1.0-beta.16 | データ永続化（ゼロ設定） |
-| Auth | Better Auth | - | 認証・セッション管理 |
-| Language | TypeScript | ^5.7.3 | 全パッケージ共通 |
-| Test Framework | Vitest | ^3.0.5 | ユニット・統合テスト |
-| E2E Test | Playwright | ^1.58.2 | ブラウザテスト |
-| HTTP Client (UI) | TanStack Query | - | データフェッチング |
-| Router (UI) | React Router | - | SPA ルーティング |
-| Container | Docker | - | 本番デプロイ |
-| CI/CD | GitHub Actions | - | PR チェック・リリース |
+| Backend Framework | Express.js | 4.x | HTTP API 伺服器 |
+| Frontend Framework | React | 18.x | 儀表板 UI |
+| Build Tool (UI) | Vite | - | 前端建置 |
+| ORM | Drizzle ORM | ^0.38.4 | DB schema 與查詢 |
+| Database | PostgreSQL (embedded) | 18.1.0-beta.16 | 資料持久化（零設定） |
+| Auth | Better Auth | - | 認證與 session 管理 |
+| Language | TypeScript | ^5.7.3 | 全套件共用 |
+| Test Framework | Vitest | ^3.0.5 | 單元與整合測試 |
+| E2E Test | Playwright | ^1.58.2 | 瀏覽器測試 |
+| HTTP Client (UI) | TanStack Query | - | 資料擷取 |
+| Router (UI) | React Router | - | SPA 路由 |
+| Container | Docker | - | 正式部署 |
+| CI/CD | GitHub Actions | - | PR 檢查與發布 |
 
 ---
 
-## 関鍵指令速查
+## 常用指令速查
 
 ```bash
-# 開発起動（API + UI、ウォッチモード）
+# 啟動開發環境（API + UI，watch 模式）
 pnpm dev
 
-# 開発起動（ウォッチなし）
+# 啟動開發環境（不啟用 watch）
 pnpm dev:once
 
-# サーバーのみ起動
+# 僅啟動伺服器
 pnpm dev:server
 
-# 全パッケージビルド
+# 建置全部套件
 pnpm build
 
-# 型チェック
+# 型別檢查
 pnpm typecheck
 
-# テスト実行（Vitest のみ）
+# 執行測試（僅 Vitest）
 pnpm test
 
-# テスト（ウォッチモード）
+# 測試（watch 模式）
 pnpm test:watch
 
-# E2E テスト（Playwright）
+# E2E 測試（Playwright）
 pnpm test:e2e
 
-# DB マイグレーション生成
+# 產生 DB migration
 pnpm db:generate
 
-# DB マイグレーション適用
+# 套用 DB migration
 pnpm db:migrate
 
-# CLI（ローカル開発）
+# CLI（本地開發）
 pnpm paperclipai <command>
 
-# 初回セットアップ
+# 初始設定
 npx paperclipai onboard --yes
 
 # Storybook
@@ -73,41 +73,41 @@ pnpm storybook
 
 ---
 
-## 文書地図
+## 文件地圖
 
-| 文書 | 内容 |
-|-----|------|
-| [INDEX.md](./INDEX.md) | このファイル — 総覧・速查 |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | システムアーキテクチャ・コンポーネント・設計決策 |
-| [DATA_MODEL.md](./DATA_MODEL.md) | データモデル・ER 図・スキーマ詳細 |
-| [API_SURFACE.md](./API_SURFACE.md) | REST API・CLI コマンドリファレンス |
-| [DEV_GUIDE.md](./DEV_GUIDE.md) | 開発者上手ガイド・環境設定・テスト |
-| [CODEBASE_MAP.md](./CODEBASE_MAP.md) | コード地図・「何を修正するには？」速查 |
-| [DISCOVERY_LOG.md](./DISCOVERY_LOG.md) | 探索記録・既知の技術債・未解決の疑問 |
-| [TRACE_META.md](./TRACE_META.md) | トレースメタデータ（増分更新用） |
+| 文件 | 內容 |
+|------|------|
+| [INDEX.md](./INDEX.md) | 此文件 — 總覽與速查 |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | 系統架構、元件與設計決策 |
+| [DATA_MODEL.md](./DATA_MODEL.md) | 資料模型、ER 圖與 schema 詳細說明 |
+| [API_SURFACE.md](./API_SURFACE.md) | REST API 與 CLI 指令參考 |
+| [DEV_GUIDE.md](./DEV_GUIDE.md) | 開發者上手指南、環境設定與測試 |
+| [CODEBASE_MAP.md](./CODEBASE_MAP.md) | 程式碼地圖與「如何修改 X？」速查 |
+| [DISCOVERY_LOG.md](./DISCOVERY_LOG.md) | 探索記錄、已知技術債與待解問題 |
+| [TRACE_META.md](./TRACE_META.md) | Trace metadata（供增量更新使用） |
 
 ---
 
-## プロジェクト専用術語表
+## 專案專用術語表
 
-| 用語 | 定義 |
-|-----|------|
-| **Company** | Paperclip の最上位オブジェクト。1 インスタンスで複数 Company を運営可能。 |
-| **Agent** | エージェント。「従業員」。Claude Code / OpenClaw 等の実際のランタイムに紐付く。 |
-| **Board** | ボード。人間のオペレーター。Company 全体のガバナンスを担う。 |
-| **Heartbeat** | ハートビート。エージェントの定期起動サイクル。スケジュールまたはイベントでトリガー。 |
-| **Issue** | タスク。チケット。会社のゴールに連鎖する作業単位。 |
-| **Heartbeat Run** | 1 回のハートビート実行の記録（`heartbeat_runs` テーブル）。 |
-| **Adapter** | エージェントランタイムとの接続層（例: `claude_local`、`openclaw_gateway`）。 |
-| **Skill** | エージェントに注入されるマークダウン形式の知識・手順書。 |
-| **Routine** | スケジュール済みの定期タスク定義（cron / webhook / API トリガー）。 |
-| **Worktree** | 開発用の分離 git worktree インスタンス。独自 DB とポートを持つ。 |
-| **Execution Workspace** | Issue 実行時の git worktree またはプロジェクトワークスペース。 |
-| **Activity Log** | すべての変更操作の監査ログ（`activity_log` テーブル）。 |
-| **Goal** | ゴール。Mission → Initiative → Project → Issue の階層。 |
-| **Clipmart** | Coming Soon: 会社テンプレートのマーケットプレイス。 |
-| **Board Claim** | `local_trusted` モードでの Board 所有権主張フロー。 |
-| **Wake Payload** | エージェント起動時に渡されるコンテキスト束（会社・ゴール・タスク・スキル等）。 |
-| **Secret Ref** | シークレット値への参照（インライン plain text の代わり）。 |
-| **Invitation** | エージェントをシステムに招待するためのトークンベースの招待フロー。 |
-| **Plugin** | out-of-process Worker として動作する拡張機能（npm パッケージ）。 |
+| 術語 | 定義 |
+|------|------|
+| **Company** | Paperclip 的最高層級物件。單一 instance 可運營多個 Company。 |
+| **Agent** | Agent，即「員工」。對應 Claude Code / OpenClaw 等實際 runtime。 |
+| **Board** | Board，即人類操作者。負責整個 Company 的 governance。 |
+| **Heartbeat** | Heartbeat，即 agent 的定期觸發週期。可由排程或事件觸發。 |
+| **Issue** | 任務、工單。連結至公司目標的工作單位。 |
+| **Heartbeat Run** | 一次 heartbeat 執行的記錄（`heartbeat_runs` 資料表）。 |
+| **Adapter** | 與 agent runtime 之間的連接層（例如：`claude_local`、`openclaw_gateway`）。 |
+| **Skill** | 注入至 agent 的 Markdown 格式知識與操作說明。 |
+| **Routine** | 已排程的定期任務定義（cron / webhook / API 觸發）。 |
+| **Worktree** | 開發用的獨立 git worktree 實例，擁有專屬 DB 與連接埠。 |
+| **Execution Workspace** | Issue 執行時所使用的 git worktree 或專案工作空間。 |
+| **Activity Log** | 所有變更操作的稽核日誌（`activity_log` 資料表）。 |
+| **Goal** | 目標。階層為 Mission → Initiative → Project → Issue。 |
+| **Clipmart** | Coming Soon：公司範本的 marketplace。 |
+| **Board Claim** | 在 `local_trusted` 模式下的 Board 所有權申請流程。 |
+| **Wake Payload** | Agent 啟動時傳入的上下文資料包（公司、目標、任務、skill 等）。 |
+| **Secret Ref** | 指向 secret 值的參照（取代內嵌純文字）。 |
+| **Invitation** | 透過 token 邀請 agent 加入系統的流程。 |
+| **Plugin** | 以 out-of-process Worker 形式運作的擴充功能（npm 套件）。 |

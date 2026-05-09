@@ -28,22 +28,22 @@
 |------|------|-----------------|-----------|------|
 | 2026-05-05 | full | initial..d6bee62 | 全部 | 初次 trace |
 
-## Trace 範囲メモ
+## Trace 範圍備註
 
-プロジェクト規模: 2,007 ファイル（TypeScript 1,149 + TSX 304 + その他）
+專案規模：2,007 個檔案（TypeScript 1,149 + TSX 304 + 其他）
 
-完全 trace 対象:
-- `server/` — Express API サーバー（ルート・サービス・アダプター・middleware）
-- `ui/` — React ダッシュボード
-- `cli/` — CLI ツール
-- `packages/db/` — DB スキーマ・マイグレーション
-- `packages/shared/` — 共有型・定数
-- `packages/adapter-utils/` — アダプターユーティリティ
-- `packages/adapters/` — 全エージェントアダプター
-- `packages/plugins/sdk/` — プラグイン SDK
+完整 trace 範圍：
+- `server/` — Express API 伺服器（路由、服務、adapter、middleware）
+- `ui/` — React 儀表板
+- `cli/` — CLI 工具
+- `packages/db/` — DB schema 與 migration
+- `packages/shared/` — 共用型別與常數
+- `packages/adapter-utils/` — Adapter 工具函式
+- `packages/adapters/` — 所有 agent adapter
+- `packages/plugins/sdk/` — Plugin SDK
 
-部分 trace（ファイルが多く概要のみ）:
-- `docs/` — Mintlify 公開ドキュメント（内容は README/既存ドキュメントと重複部分大）
-- `evals/` — LLM 評価スクリプト（promptfoo）
-- `tests/e2e/` — E2E テスト実装詳細
-- `scripts/` — ビルド・リリーススクリプト詳細
+部分 trace（檔案較多，僅涵蓋概覽）：
+- `docs/` — Mintlify 公開文件（內容與 README / 現有文件多有重疊）
+- `evals/` — LLM 評估腳本（promptfoo）
+- `tests/e2e/` — E2E 測試實作細節
+- `scripts/` — 建置與發布腳本細節
