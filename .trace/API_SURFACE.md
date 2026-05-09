@@ -1,11 +1,11 @@
 # API Surface — Paperclip
 
 > 本文件為 Paperclip 專案的 API 與外部介面參考文件。
-> 基準日：2026-05-05 | 總 REST 端點數：324
+> 基準日：2026-05-05 | 總 REST endpoint 數：324
 
 ---
 
-## 1. 認證・認可模型
+## 1. 認證・授權模型
 
 Paperclip 有三種 Actor 類型，由 `actorMiddleware` 在每個請求中識別：
 
@@ -13,7 +13,7 @@ Paperclip 有三種 Actor 類型，由 `actorMiddleware` 在每個請求中識�
 |-----------|---------|---------|
 | **board** (Local) | 部署模式為 `local_trusted` 時自動指派 | 單機本地模式，無需任何憑證 |
 | **board** (API Key) | `Authorization: Bearer <board-api-key>` | 程式化存取 Board 操作 |
-| **board** (Session) | Cookie セッション（Better Auth） | 瀏覽器登入（`authenticated` 模式） |
+| **board** (Session) | Cookie session（Better Auth） | 瀏覽器登入（`authenticated` 模式） |
 | **agent** (API Key) | `Authorization: Bearer <agent-api-key>` | Agent 持久性 API Key（DB 儲存） |
 | **agent** (JWT) | `Authorization: Bearer <signed-jwt>` | Agent 本地 JWT（`verifyLocalAgentJwt` 驗證）|
 
@@ -51,9 +51,9 @@ flowchart TD
 
 ---
 
-## 2. 主要 REST API 端點
+## 2. 主要 REST API Endpoint
 
-所有端點均以 `/api` 為前綴。
+所有 endpoint 均以 `/api` 為前綴。
 
 ### Companies（`/api/companies`）
 
@@ -89,7 +89,7 @@ flowchart TD
 | GET | `/agents/me` | 取得當前 Agent 自身資訊（Agent Actor 使用）|
 | GET | `/agents/me/inbox-lite` | 取得輕量版 Inbox |
 | GET | `/agents/me/inbox/mine` | 取得分配給自己的 Issue |
-| GET | `/instance/scheduler-heartbeats` | 排程器心跳狀態 |
+| GET | `/instance/scheduler-heartbeats` | 排程器 heartbeat 狀態 |
 | GET | `/companies/:companyId/org` | 取得組織圖資料 |
 | GET | `/companies/:companyId/org.svg` | 取得組織圖 SVG |
 
@@ -140,7 +140,7 @@ flowchart TD
 | POST | `/routines/:id/triggers` | 建立觸發器 |
 | PATCH | `/routine-triggers/:id` | 更新觸發器 |
 | DELETE | `/routine-triggers/:id` | 刪除觸發器 |
-| POST | `/routine-triggers/public/:publicId/fire` | 公開 Webhook 觸發（⚠️ 無需認證）|
+| POST | `/routine-triggers/public/:publicId/fire` | 公開 webhook 觸發（⚠️ 無需認證）|
 
 ### Goals（`/api/goals`）
 
@@ -173,9 +173,9 @@ flowchart TD
 | GET | `/companies/:companyId/costs/summary` | 費用摘要 |
 | GET | `/companies/:companyId/costs/by-agent` | 依 Agent 分類費用 |
 | GET | `/companies/:companyId/costs/by-provider` | 依 LLM Provider 分類費用 |
-| GET | `/companies/:companyId/budgets/overview` | 預算總覽 |
-| PATCH | `/companies/:companyId/budgets` | 更新公司預算 |
-| PATCH | `/agents/:agentId/budgets` | 更新 Agent 預算 |
+| GET | `/companies/:companyId/budgets/overview` | Budget 總覽 |
+| PATCH | `/companies/:companyId/budgets` | 更新公司 budget |
+| PATCH | `/agents/:agentId/budgets` | 更新 Agent budget |
 | GET | `/issues/:id/cost-summary` | Issue 費用摘要 |
 
 ### Plugins（`/api/plugins`）
@@ -228,11 +228,11 @@ flowchart TD
 }
 ```
 
-### 3.2 Issue Checkout（Agent が Issue を取得して実行開始）
+### 3.2 Issue Checkout（Agent 簽出 Issue 並開始執行）
 
 **`POST /api/issues/:id/checkout`**
 
-Agent が Issue の実行権を獲得する。同時実行防止（排他ロック）。
+Agent 取得 Issue 的執行權。具備並行防護機制（排他鎖定）。
 
 ```json
 // Request Body
@@ -251,14 +251,14 @@ Agent が Issue の実行権を獲得する。同時実行防止（排他ロッ�
 { "error": "Issue is already checked out" }
 ```
 
-### 3.3 Heartbeat Context（Agent 専用）
+### 3.3 Heartbeat Context（Agent 專用）
 
 **`GET /api/issues/:id/heartbeat-context?wakeCommentId=<id>`**
 
 Agent 每次執行前呼叫，取得 Issue 完整執行上下文。
 
 ```json
-// Response 200（抄録）
+// Response 200（摘錄）
 {
   "issue": {
     "id": "...", "identifier": "PAP-42", "title": "...",
@@ -350,11 +350,11 @@ Agent 每次執行前呼叫，取得 Issue 完整執行上下文。
 
 ---
 
-## 5. CLI コマンドリファレンス
+## 5. CLI 指令參考
 
 CLI 工具名稱：`paperclipai`（開發中：`pnpm paperclipai`）
 
-### 通用選項（所有命令適用）
+### 通用選項（所有指令適用）
 
 ```
 --data-dir <path>     覆寫資料目錄（預設 ~/.paperclip）
@@ -405,7 +405,7 @@ paperclipai issue release <id>
 paperclipai agent list --company-id <id>
 paperclipai agent get <id>
 paperclipai agent local-cli <id-or-shortname> --company-id <id>
-# ↑ API Key 生成 + 環境変数の export 行を出力
+# ↑ 產生 API Key 並輸出對應的環境變數 export 指令
 ```
 
 ### Approval 管理
@@ -417,7 +417,7 @@ paperclipai approval reject <id> [--decision-note "..."]
 paperclipai approval resubmit <id> [--payload '{"...":"..."}']
 ```
 
-### Heartbeat・その他
+### Heartbeat・其他
 
 ```bash
 paperclipai heartbeat run --agent-id <id> [--api-base ...] [--api-key ...]
@@ -429,27 +429,27 @@ paperclipai company delete <id-or-prefix> --yes --confirm <same>
 
 ---
 
-## 6. WebSocket ライブイベント
+## 6. WebSocket 即時事件
 
-### 接続 URL
+### 連線 URL
 
 ```
 ws://<host>/api/companies/<companyId>/events/ws
 ```
 
-### 認証
+### 認證
 
-WebSocket Upgrade 時に HTTP Header で認証：
+WebSocket Upgrade 時透過 HTTP Header 進行認證：
 
 ```
 Authorization: Bearer <board-api-key or agent-api-key>
 ```
 
-`authenticated` モードでは Cookie セッションも使用可。
+`authenticated` 模式下亦可使用 Cookie session。
 
-### イベント形式
+### 事件格式
 
-サーバーから JSON メッセージとして push される：
+伺服器以 JSON 訊息形式推送：
 
 ```json
 { "type": "issue.updated", "data": { "id": "...", "status": "done" } }
@@ -457,47 +457,47 @@ Authorization: Bearer <board-api-key or agent-api-key>
 
 ### Ping/Pong
 
-サーバーは 30 秒ごとに `ping` を送信。応答がないクライアントは切断される。
+伺服器每 30 秒傳送一次 `ping`。未回應的用戶端將被中斷連線。
 
-### その他のストリーミングエンドポイント
+### 其他串流 Endpoint
 
-| Path | 種類 | 説明 |
+| Path | 類型 | 說明 |
 |------|------|------|
-| `/api/plugins/:pluginId/bridge/stream/:channel` | SSE | Plugin イベントストリーム |
+| `/api/plugins/:pluginId/bridge/stream/:channel` | SSE | Plugin 事件串流 |
 
 ---
 
-## 7. エージェント向け API
+## 7. Agent 專用 API
 
-Agent が実行中に呼ぶ特殊エンドポイント。`Authorization: Bearer <agent-api-key>` 必須。
+Agent 執行期間呼叫的特殊 endpoint。必須附帶 `Authorization: Bearer <agent-api-key>`。
 
 | Method | Path | 說明 |
 |--------|------|------|
-| GET | `/agents/me` | Agent 自身のプロフィール・権限取得 |
-| GET | `/agents/me/inbox/mine` | 自分にアサインされた Issue 一覧 |
-| GET | `/issues/:id/heartbeat-context` | 実行コンテキスト取得（必須、毎実行前）|
-| POST | `/issues/:id/checkout` | Issue の排他ロック獲得 |
-| POST | `/issues/:id/release` | 排他ロック解放 |
-| POST | `/issues/:id/comments` | ユーザーへの進捗報告 |
-| PUT | `/issues/:id/documents/:key` | 成果物ドキュメント保存 |
-| POST | `/companies/:companyId/cost-events` | トークン使用量・コスト報告 |
-| PATCH | `/issues/:id` | Issue ステータス・進捗更新 |
+| GET | `/agents/me` | 取得 Agent 自身的 Profile 與權限 |
+| GET | `/agents/me/inbox/mine` | 列出分配給自己的 Issue |
+| GET | `/issues/:id/heartbeat-context` | 取得執行上下文（每次執行前必呼叫）|
+| POST | `/issues/:id/checkout` | 取得 Issue 排他鎖定 |
+| POST | `/issues/:id/release` | 釋放排他鎖定 |
+| POST | `/issues/:id/comments` | 向使用者回報進度 |
+| PUT | `/issues/:id/documents/:key` | 儲存成果物文件 |
+| POST | `/companies/:companyId/cost-events` | 回報 Token 用量與費用 |
+| PATCH | `/issues/:id` | 更新 Issue 狀態與進度 |
 
-コスト報告ペイロード例：`{ "issueId":"...", "runId":"...", "provider":"anthropic", "model":"claude-sonnet-4-6", "inputTokens":5000, "outputTokens":1200, "costUsd":0.025 }`
+費用回報 payload 範例：`{ "issueId":"...", "runId":"...", "provider":"anthropic", "model":"claude-sonnet-4-6", "inputTokens":5000, "outputTokens":1200, "costUsd":0.025 }`
 
-予算超過時はサーバーが Agent を停止（エラー応答）。
+超過 budget 時，伺服器會回傳錯誤回應並停止 Agent 執行。
 
 ---
 
-## 付録：API 関連環境変数
+## 附錄：API 相關環境變數
 
-| 変数名 | 説明 |
-|-------|------|
-| `PORT` | サーバーポート（デフォルト 3100）|
-| `BETTER_AUTH_SECRET` | 認証 HMAC シークレット |
-| `PAPERCLIP_ENABLE_COMPANY_DELETION` | Company 削除 API を有効化 |
-| `PAPERCLIP_DEPLOYMENT_MODE` | デプロイモード上書き |
-| `PAPERCLIP_API_URL` | Agent が使用する API URL |
-| `PAPERCLIP_COMPANY_ID` | Agent が所属する Company ID |
-| `PAPERCLIP_AGENT_ID` | Agent 自身の ID |
-| `PAPERCLIP_API_KEY` | Agent の API Key |
+| 變數名稱 | 說明 |
+|---------|------|
+| `PORT` | 伺服器 port（預設 3100）|
+| `BETTER_AUTH_SECRET` | 認證 HMAC secret |
+| `PAPERCLIP_ENABLE_COMPANY_DELETION` | 啟用 Company 刪除 API |
+| `PAPERCLIP_DEPLOYMENT_MODE` | 覆寫部署模式 |
+| `PAPERCLIP_API_URL` | Agent 使用的 API URL |
+| `PAPERCLIP_COMPANY_ID` | Agent 所屬的 Company ID |
+| `PAPERCLIP_AGENT_ID` | Agent 自身的 ID |
+| `PAPERCLIP_API_KEY` | Agent 的 API Key |

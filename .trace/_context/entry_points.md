@@ -1,49 +1,49 @@
-# Entry Points
+# 進入點（Entry Points）
 
-## サーバー起動フロー
+## 伺服器啟動流程
 
-### メインエントリポイント
+### 主要進入點
 
 **`server/src/index.ts:startServer()`**
 
-1. `loadConfig()` — 設定を読み込む（ENV vars → config file → default）
-2. `initTelemetry()` — テレメトリ初期化
-3. **Embedded PostgreSQL / 外部 Postgres 接続**
-   - `DATABASE_URL` が未設定 → `EmbeddedPostgres` を起動（`embedded-postgres` パッケージ）
-   - データディレクトリ: `~/.paperclip/instances/default/db`
-4. `createDb(databaseUrl)` — Drizzle ORM インスタンス生成
-5. **DB マイグレーション** (`applyPendingMigrations`)
-6. `createStorageServiceFromConfig()` — ストレージサービス初期化（local disk or S3）
-7. `createPluginWorkerManager()` — プラグインワーカー管理者初期化
-8. `createApp(...)` — Express アプリ生成（全ルート登録）
-9. `createServer(app)` — Node.js HTTP サーバー生成
-10. `setupLiveEventsWebSocketServer(server)` — WebSocket サーバー初期化（SSE/ライブイベント）
-11. `server.listen(port)` — ポートバインド（デフォルト 3100）
-12. **サービス起動**:
-    - `heartbeatService(db)` — ハートビートスケジューラ起動
-    - `routineService(db)` — スケジュール済みルーティン起動
-    - `feedbackService(db)` — フィードバックサービス起動
-    - `reconcilePersistedRuntimeServicesOnStartup()` — 起動時にランタイムサービスを復旧
+1. `loadConfig()` — 讀取設定（環境變數 → 設定檔 → 預設值）
+2. `initTelemetry()` — 初始化 telemetry
+3. **Embedded PostgreSQL / 外部 Postgres 連線**
+   - `DATABASE_URL` 未設定 → 啟動 `EmbeddedPostgres`（`embedded-postgres` 套件）
+   - 資料目錄：`~/.paperclip/instances/default/db`
+4. `createDb(databaseUrl)` — 建立 Drizzle ORM 實例
+5. **DB migration**（`applyPendingMigrations`）
+6. `createStorageServiceFromConfig()` — 初始化儲存服務（本機磁碟或 S3）
+7. `createPluginWorkerManager()` — 初始化 plugin worker 管理員
+8. `createApp(...)` — 建立 Express 應用程式（註冊所有路由）
+9. `createServer(app)` — 建立 Node.js HTTP 伺服器
+10. `setupLiveEventsWebSocketServer(server)` — 初始化 WebSocket 伺服器（SSE/即時事件）
+11. `server.listen(port)` — 綁定埠號（預設 3100）
+12. **啟動各服務**：
+    - `heartbeatService(db)` — 啟動 heartbeat 排程器
+    - `routineService(db)` — 啟動已排程的 routine
+    - `feedbackService(db)` — 啟動 feedback 服務
+    - `reconcilePersistedRuntimeServicesOnStartup()` — 啟動時復原 runtime 服務
 
-### CLI エントリポイント
+### CLI 進入點
 
 **`cli/src/index.ts`**
 
 ```
-paperclipai onboard    # 初回セットアップ
-paperclipai run        # サーバー起動（onboard + doctor + start）
-paperclipai configure  # 設定対話
-paperclipai doctor     # ヘルスチェック・修復
-paperclipai issue      # タスク管理（list/create/update）
+paperclipai onboard    # 初次設定
+paperclipai run        # 啟動伺服器（onboard + doctor + start）
+paperclipai configure  # 互動式設定
+paperclipai doctor     # 健康檢查與修復
+paperclipai issue      # 任務管理（list/create/update）
 paperclipai worktree   # git worktree 管理
 ```
 
-### フロントエンドエントリポイント
+### 前端進入點
 
 **`ui/src/main.tsx`**
 
 ```tsx
-initPluginBridge(React, ReactDOM);  // プラグイン UI ブリッジ初期化
+initPluginBridge(React, ReactDOM);  // 初始化 plugin UI bridge
 createRoot(container).render(
   <BrowserRouter>
     <QueryClientProvider client={queryClient}>
@@ -59,57 +59,57 @@ createRoot(container).render(
 )
 ```
 
-## Express App 初期化（`server/src/app.ts`）
+## Express App 初始化（`server/src/app.ts`）
 
-`createApp(db, config, options)` が呼ばれ、以下の順で設定される：
+呼叫 `createApp(db, config, options)` 後，依以下順序進行設定：
 
-### Middleware スタック（登録順）
+### Middleware 堆疊（依註冊順序）
 
-1. `httpLogger` — リクエストロギング
-2. `privateHostnameGuard` — プライベートホスト名ガード（`authenticated` モード時）
-3. `boardMutationGuard` — Board 操作の認可チェック
-4. `actorMiddleware` — 認証・アクター識別（Board user / Agent JWT）
-5. 各ルート登録
-6. `errorHandler` — 集中エラーハンドリング
+1. `httpLogger` — 請求記錄
+2. `privateHostnameGuard` — 私有主機名稱守衛（`authenticated` 模式時）
+3. `boardMutationGuard` — Board 操作授權檢查
+4. `actorMiddleware` — 驗證與 actor 識別（Board 使用者 / Agent JWT）
+5. 各路由註冊
+6. `errorHandler` — 集中式錯誤處理
 
-### ルート登録（`/api` プレフィックス）
+### 路由註冊（`/api` 前綴）
 
-| ルートファイル | パスパターン | 主な責務 |
-|-------------|------------|---------|
-| `routes/health.ts` | `/api/health` | ヘルスチェック |
-| `routes/auth.ts` | `/api/auth/*` | Better Auth（ログイン・セッション） |
-| `routes/companies.ts` | `/api/companies` | 会社 CRUD |
-| `routes/agents.ts` | `/api/agents`, `/api/companies/:id/agents` | エージェント管理 |
-| `routes/issues.ts` | `/api/issues`, `/api/companies/:id/issues` | タスク管理（最大のルートファイル） |
-| `routes/heartbeat.ts` (via service) | (内部) | ハートビート実行 |
-| `routes/routines.ts` | `/api/routines` | スケジュール済みルーティン |
-| `routes/goals.ts` | `/api/goals` | ゴール管理 |
-| `routes/projects.ts` | `/api/projects` | プロジェクト管理 |
-| `routes/approvals.ts` | `/api/approvals` | 承認ワークフロー |
-| `routes/costs.ts` | `/api/costs` | コスト・予算 |
-| `routes/secrets.ts` | `/api/secrets` | シークレット管理 |
-| `routes/plugins.ts` | `/api/plugins` | プラグイン管理 |
-| `routes/adapters.ts` | `/api/adapters` | アダプター設定 |
-| `routes/access.ts` | `/api/access`, `/api/invites` | アクセス管理・招待 |
-| `routes/activity.ts` | `/api/activity` | アクティビティログ |
-| `routes/dashboard.ts` | `/api/dashboard` | ダッシュボード集計 |
-| `routes/environments.ts` | `/api/environments` | 実行環境管理 |
+| 路由檔案 | 路徑模式 | 主要職責 |
+|----------|----------|----------|
+| `routes/health.ts` | `/api/health` | 健康檢查 |
+| `routes/auth.ts` | `/api/auth/*` | Better Auth（登入・session） |
+| `routes/companies.ts` | `/api/companies` | 公司 CRUD |
+| `routes/agents.ts` | `/api/agents`、`/api/companies/:id/agents` | 代理程式管理 |
+| `routes/issues.ts` | `/api/issues`、`/api/companies/:id/issues` | 任務管理（最大路由檔案） |
+| `routes/heartbeat.ts`（透過 service） | （內部） | heartbeat 執行 |
+| `routes/routines.ts` | `/api/routines` | 已排程 routine |
+| `routes/goals.ts` | `/api/goals` | goal 管理 |
+| `routes/projects.ts` | `/api/projects` | 專案管理 |
+| `routes/approvals.ts` | `/api/approvals` | 審核工作流程 |
+| `routes/costs.ts` | `/api/costs` | 成本與 budget |
+| `routes/secrets.ts` | `/api/secrets` | secret 管理 |
+| `routes/plugins.ts` | `/api/plugins` | plugin 管理 |
+| `routes/adapters.ts` | `/api/adapters` | adapter 設定 |
+| `routes/access.ts` | `/api/access`、`/api/invites` | 存取管理與邀請 |
+| `routes/activity.ts` | `/api/activity` | 活動日誌 |
+| `routes/dashboard.ts` | `/api/dashboard` | 儀表板彙總 |
+| `routes/environments.ts` | `/api/environments` | 執行環境管理 |
 | `routes/execution-workspaces.ts` | `/api/execution-workspaces` | Execution Workspace |
-| `routes/assets.ts` | `/api/assets` | アセット（画像等） |
-| `routes/instance-settings.ts` | `/api/instance-settings` | インスタンス設定 |
-| `routes/llms.ts` | `/api/llms` | LLM プロバイダー情報 |
-| `routes/plugin-ui-static.ts` | `/plugins/:pluginId/ui` | プラグイン UI 静的配信 |
+| `routes/assets.ts` | `/api/assets` | 資產（圖片等） |
+| `routes/instance-settings.ts` | `/api/instance-settings` | 執行個體設定 |
+| `routes/llms.ts` | `/api/llms` | LLM provider 資訊 |
+| `routes/plugin-ui-static.ts` | `/plugins/:pluginId/ui` | plugin UI 靜態檔案提供 |
 
-### UI 配信モード
+### UI 提供模式
 
-- `none` — API のみ
-- `static` — ビルド済み React ファイルを serve
-- `vite-dev` — 開発時のみ、Vite dev middleware を介して serve
+- `none` — 僅提供 API
+- `static` — 提供已建置的 React 檔案
+- `vite-dev` — 僅開發時，透過 Vite dev middleware 提供
 
-## デプロイモード
+## 部署模式
 
-| モード | 起動方法 | 認証 |
-|-------|---------|------|
-| `local_trusted` | デフォルト | 認証なし（ローカルループバック）|
-| `authenticated/private` | `--bind lan` / `--bind tailnet` | Better Auth ログイン必須 |
-| `authenticated/public` | 明示設定 | Better Auth ログイン必須 |
+| 模式 | 啟動方式 | 驗證 |
+|------|----------|------|
+| `local_trusted` | 預設 | 無需驗證（本機 loopback） |
+| `authenticated/private` | `--bind lan` / `--bind tailnet` | 必須 Better Auth 登入 |
+| `authenticated/public` | 明確設定 | 必須 Better Auth 登入 |

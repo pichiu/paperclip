@@ -1,79 +1,79 @@
-# Web Search 発見まとめ
+# 網路搜尋發現摘要
 
-## 検索結果サマリー
+## 搜尋結果總覽
 
-### 1. プロジェクト公式情報
+### 1. 專案官方資訊
 
-| リソース | URL | 内容 |
-|---------|-----|------|
-| 公式サイト | https://paperclip.ing/ | ランディングページ |
-| 公式ドキュメント | https://docs.paperclip.ing/ | Mintlify ベースの公開ドキュメント |
-| GitHub | https://github.com/paperclipai/paperclip | ソースコード |
-| アーキテクチャドキュメント | https://docs.paperclip.ing/start/architecture | 公式アーキテクチャ説明 |
-| Discord | https://discord.gg/m4HZY7xNG3 | コミュニティ |
-| Twitter/X | https://x.com/papercliping | 公式アカウント |
+| 資源 | URL | 內容 |
+|------|-----|------|
+| 官方網站 | https://paperclip.ing/ | 登陸頁面 |
+| 官方文件 | https://docs.paperclip.ing/ | 基於 Mintlify 的公開文件 |
+| GitHub | https://github.com/paperclipai/paperclip | 原始碼 |
+| 架構文件 | https://docs.paperclip.ing/start/architecture | 官方架構說明 |
+| Discord | https://discord.gg/m4HZY7xNG3 | 社群 |
+| Twitter/X | https://x.com/papercliping | 官方帳號 |
 
-### 2. 記事・解説
+### 2. 文章與解說
 
-| 記事 | URL | キー takeaway |
-|-----|-----|--------------|
-| Towards AI 解説 | https://pub.towardsai.net/paperclip-the-open-source-operating-system-for-zero-human-companies-2c16f3f22182 | "Open-Source Operating System for Multi-Agent Companies" として位置づけ |
-| MindStudio ハートビート解説 | https://www.mindstudio.ai/blog/what-is-heartbeat-pattern-paperclip-ai-agents-24-7 | ハートビートパターンの詳細な説明 |
-| MindStudio AI チーム構築ガイド | https://www.mindstudio.ai/blog/how-to-build-multi-agent-company-paperclip-claude-code | Claude Code + Paperclip の実践ガイド |
-| DEV Community Deep Dive | https://dev.to/truongpx396/paperclip-deep-dive-a-build-guide-for-an-ai-company-control-plane-dda | コードレベルの深掘り解説 |
-| Zeabur デプロイガイド | https://zeabur.com/blogs/deploy-paperclip-ai-agent-orchestration | Docker デプロイ手順 |
-| Flowtivity 解説 | https://flowtivity.ai/blog/zero-human-company-paperclip-ai-agent-orchestration/ | ビジネス向け解説 |
-| Medium 解説 | https://medium.com/@creativeaininja/paperclip-the-open-source-platform-turning-ai-agents-into-an-actual-company-7348015c5bf7 | 2026年3月の解説記事 |
-| jimmysong.io | https://jimmysong.io/ai/paperclip/ | 日本語圏向け解説（実際は中国語） |
+| 文章 | URL | 重點摘要 |
+|------|-----|---------|
+| Towards AI 解說 | https://pub.towardsai.net/paperclip-the-open-source-operating-system-for-zero-human-companies-2c16f3f22182 | 定位為「多代理程式公司的開源作業系統」 |
+| MindStudio heartbeat 解說 | https://www.mindstudio.ai/blog/what-is-heartbeat-pattern-paperclip-ai-agents-24-7 | heartbeat pattern 的詳細說明 |
+| MindStudio AI 團隊建置指南 | https://www.mindstudio.ai/blog/how-to-build-multi-agent-company-paperclip-claude-code | Claude Code + Paperclip 實踐指南 |
+| DEV Community Deep Dive | https://dev.to/truongpx396/paperclip-deep-dive-a-build-guide-for-an-ai-company-control-plane-dda | 程式碼層級的深度解析 |
+| Zeabur 部署指南 | https://zeabur.com/blogs/deploy-paperclip-ai-agent-orchestration | Docker 部署步驟 |
+| Flowtivity 解說 | https://flowtivity.ai/blog/zero-human-company-paperclip-ai-agent-orchestration/ | 商業用途解說 |
+| Medium 解說 | https://medium.com/@creativeaininja/paperclip-the-open-source-platform-turning-ai-agents-into-an-actual-company-7348015c5bf7 | 2026 年 3 月的解說文章 |
+| jimmysong.io | https://jimmysong.io/ai/paperclip/ | 中文解說 |
 
-### 3. キー発見事項
+### 3. 重點發現
 
-#### 発足と成長
-- 開発者: 匿名（@dotta）
-- 公開: 2026年3月4日
-- 3週間で GitHub Stars 30,000 超（2026年Q1 最速の OSS AI リポジトリの一つ）
+#### 創立與成長
+- 開發者：匿名（@dotta）
+- 公開日期：2026 年 3 月 4 日
+- 三週內 GitHub Stars 突破 30,000（2026 年 Q1 成長最快的 OSS AI 儲存庫之一）
 
-#### ハートビートパターンについての説明（MindStudio）
+#### heartbeat pattern 說明（MindStudio）
 > "The heartbeat pattern is a scheduling and context-management mechanism that wakes an AI agent at regular intervals, injects fresh context into its working memory, and allows it to operate without any human trigger."
 
-これは Paperclip の核心的な設計パターン。エージェントを「スケジュール駆動」で起動し、セッション状態を維持することで、24/7 自律運用を実現する。
+這是 Paperclip 的核心設計模式。以「排程驅動」方式喚醒代理程式，並透過維持 session 狀態來實現 24/7 自主運作。
 
-#### アーキテクチャドキュメント（公式）
+#### 架構文件（官方）
 https://docs.paperclip.ing/start/architecture
 
-Paperclip の公式アーキテクチャドキュメントが存在し、主要コンポーネントの関係を説明している:
+Paperclip 的官方架構文件說明了各主要元件之間的關係：
 - Control Plane（Paperclip Server）
-- Agent Adapters（Claude Code, Codex, OpenClaw, etc.）
+- Agent Adapters（Claude Code、Codex、OpenClaw 等）
 - Board Dashboard（React UI）
-- Storage（Embedded Postgres or external）
+- Storage（Embedded Postgres 或外部資料庫）
 
-#### Awesome Paperclip（コミュニティプラグイン集）
+#### Awesome Paperclip（社群 plugin 集合）
 - https://github.com/gsxdsm/awesome-paperclip
 
-コミュニティが作成したプラグインやツールのキュレーションリスト。プラグインエコシステムの存在を示す。
+社群整理的 plugin 和工具精選清單，顯示 plugin 生態系統的存在。
 
 #### GitHub Releases
 - https://github.com/paperclipai/paperclip/releases/tag/v2026.318.0
-- リリースはバージョン形式 `v{year}.{dayOfYear}.{patch}` を使用
+- 發布版本格式：`v{year}.{dayOfYear}.{patch}`
 
-### 4. 関連・競合プロジェクト
+### 4. 相關與競爭專案
 
-| プロジェクト | 関係 |
-|------------|------|
-| OpenClaw | Paperclip が使用するエージェントの一つ（OpenClaw ≒ 従業員、Paperclip ≒ 会社） |
-| Claude Code (Anthropic) | Paperclip が使用する主要なエージェントの一つ |
-| OpenAI Codex | サポートされるエージェント |
-| Cursor | サポートされるエージェント（cursor_local adapter） |
-| OpenCode | サポートされるエージェント |
+| 專案 | 關係 |
+|------|------|
+| OpenClaw | Paperclip 使用的代理程式之一（OpenClaw ≒ 員工，Paperclip ≒ 公司） |
+| Claude Code (Anthropic) | Paperclip 使用的主要代理程式之一 |
+| OpenAI Codex | 支援的代理程式 |
+| Cursor | 支援的代理程式（cursor_local adapter） |
+| OpenCode | 支援的代理程式 |
 
-### 5. コミュニティとサポート
+### 5. 社群與支援
 
-- Discord の #dev チャンネルが主要な開発者議論の場
-- Contribution は PR テンプレート + Greptile スコア 5/5 が必須
-- プラグインシステムを通じた拡張が推奨（コアへの直接 PR は慎重に）
+- Discord 的 #dev 頻道是主要的開發者討論場所
+- 貢獻需提供 PR 範本 + Greptile 評分 5/5
+- 建議透過 plugin 系統進行擴充（直接對核心提交 PR 需謹慎）
 
-### 6. 注意事項・未解決の疑問
+### 6. 注意事項與未解決的疑問
 
-- `paperclipai.net` という別ドメインが存在するが公式との関係は ⚠️ 未確認
-- `agencyenterprise/paperclip-ai` というフォークが存在する
-- ClipMart（ワンクリックで会社テンプレートを配布するマーケットプレイス）は COMING SOON 状態
+- `paperclipai.net` 另一個網域存在，但與官方的關係 ⚠️ 尚未確認
+- 存在 `agencyenterprise/paperclip-ai` 的 fork
+- ClipMart（一鍵發布公司範本的市集）目前為 COMING SOON 狀態

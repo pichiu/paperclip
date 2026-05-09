@@ -1,185 +1,185 @@
-# Stage 1 偵察レポート
+# Stage 1 偵察報告
 
-## プロジェクト概要
+## 專案概要
 
-**Paperclip** は、AI エージェントのチームをひとつの「会社」として運営するための Node.js + React 製オープンソース Control Plane。
-"If OpenClaw is an _employee_, Paperclip is the _company_" というスローガンが示すとおり、エージェントを雇用し、組織図・目標・予算・ガバナンスを管理するオーケストレーション基盤である。
+**Paperclip** 是一個以 Node.js + React 開發的開源 Control Plane，用於將 AI 代理程式團隊作為一家「公司」來運營。
+正如其口號「If OpenClaw is an _employee_, Paperclip is the _company_」所示，Paperclip 是一個用於雇用代理程式、管理組織架構、目標、budget 和 governance 的協調基礎設施。
 
 - **URL**: https://paperclip.ing/
 - **GitHub**: https://github.com/paperclipai/paperclip
-- **ライセンス**: MIT
-- **初公開**: 2026年3月4日（GitHub stars 3週間で 30,000 超）
+- **授權條款**: MIT
+- **首次發布**: 2026 年 3 月 4 日（GitHub stars 三週內突破 30,000）
 
 ---
 
-## 技術スタック
+## 技術堆疊
 
-| カテゴリ | 技術 | バージョン | 用途 |
-|---------|------|-----------|------|
-| Runtime | Node.js | ≥20 | サーバー実行環境 |
+| 類別 | 技術 | 版本 | 用途 |
+|------|------|------|------|
+| Runtime | Node.js | ≥20 | 伺服器執行環境 |
 | Package Manager | pnpm | 9.15.4 | monorepo 管理 |
-| Backend Framework | Express.js | 4.x | HTTP API サーバー |
-| Frontend Framework | React | 18.x | ダッシュボード UI |
-| Build Tool (UI) | Vite | - | フロントエンドビルド |
-| ORM | Drizzle ORM | ^0.38.4 | DB スキーマ・クエリ |
-| Database | PostgreSQL (embedded-postgres) | 18.1.0-beta.16 | データ永続化 |
-| Auth | Better Auth | - | 認証・セッション管理 |
-| Language | TypeScript | ^5.7.3 | 全パッケージ共通 |
-| Test Framework | Vitest | ^3.0.5 | ユニット・統合テスト |
-| E2E Test | Playwright | ^1.58.2 | ブラウザテスト |
-| HTTP Client (UI) | TanStack Query (React Query) | - | データフェッチング |
-| Router (UI) | React Router | - | SPA ルーティング |
-| Container | Docker | - | 本番デプロイ |
-| CI/CD | GitHub Actions | - | PR チェック・リリース |
-| Telemetry | 独自 (anonymous) | - | 使用状況収集 |
+| Backend Framework | Express.js | 4.x | HTTP API 伺服器 |
+| Frontend Framework | React | 18.x | 儀表板 UI |
+| Build Tool (UI) | Vite | - | 前端建置 |
+| ORM | Drizzle ORM | ^0.38.4 | DB schema 與查詢 |
+| Database | PostgreSQL (embedded-postgres) | 18.1.0-beta.16 | 資料持久化 |
+| Auth | Better Auth | - | 驗證與 session 管理 |
+| Language | TypeScript | ^5.7.3 | 所有套件共用 |
+| Test Framework | Vitest | ^3.0.5 | 單元與整合測試 |
+| E2E Test | Playwright | ^1.58.2 | 瀏覽器測試 |
+| HTTP Client (UI) | TanStack Query (React Query) | - | 資料擷取 |
+| Router (UI) | React Router | - | SPA 路由 |
+| Container | Docker | - | 正式環境部署 |
+| CI/CD | GitHub Actions | - | PR 檢查與發布 |
+| Telemetry | 自製（匿名） | - | 使用狀況收集 |
 
 ---
 
-## Monorepo 構成
+## Monorepo 結構
 
 ```
 paperclip/
-├── server/               # Express.js API サーバー (@paperclipai/server)
+├── server/               # Express.js API 伺服器 (@paperclipai/server)
 │   └── src/
-│       ├── index.ts      # エントリポイント（DB初期化・HTTPサーバー起動）
-│       ├── app.ts        # Express アプリ（ルート登録）
-│       ├── routes/       # API エンドポイント群
-│       ├── services/     # ビジネスロジック（heartbeat, issues, budgets 等）
-│       ├── adapters/     # エージェント実行アダプター
-│       ├── auth/         # 認証（Better Auth）
+│       ├── index.ts      # 進入點（DB 初始化・HTTP 伺服器啟動）
+│       ├── app.ts        # Express 應用程式（路由註冊）
+│       ├── routes/       # API 端點群
+│       ├── services/     # 商業邏輯（heartbeat、issues、budgets 等）
+│       ├── adapters/     # 代理程式執行 adapter
+│       ├── auth/         # 驗證（Better Auth）
 │       ├── middleware/   # HTTP middleware
-│       ├── storage/      # ファイルストレージ抽象
-│       └── realtime/     # WebSocket（ライブイベント）
-├── ui/                   # React ダッシュボード (@paperclipai/ui)
+│       ├── storage/      # 檔案儲存抽象層
+│       └── realtime/     # WebSocket（即時事件）
+├── ui/                   # React 儀表板 (@paperclipai/ui)
 │   └── src/
-│       ├── main.tsx      # React エントリポイント
-│       ├── App.tsx       # ルートコンポーネント
-│       ├── pages/        # ページコンポーネント群
-│       ├── components/   # 共通 UI コンポーネント
-│       ├── api/          # API クライアント
-│       ├── context/      # React Context プロバイダー群
-│       └── plugins/      # プラグイン UI ブリッジ
-├── cli/                  # CLI ツール (@paperclipai/cli)
+│       ├── main.tsx      # React 進入點
+│       ├── App.tsx       # 根元件
+│       ├── pages/        # 頁面元件群
+│       ├── components/   # 共用 UI 元件
+│       ├── api/          # API client
+│       ├── context/      # React Context provider 群
+│       └── plugins/      # plugin UI bridge
+├── cli/                  # CLI 工具 (@paperclipai/cli)
 │   └── src/
-│       ├── index.ts      # CLI エントリポイント
-│       └── commands/     # CLI サブコマンド群
+│       ├── index.ts      # CLI 進入點
+│       └── commands/     # CLI 子命令群
 ├── packages/
-│   ├── db/               # DB スキーマ・マイグレーション (@paperclipai/db)
+│   ├── db/               # DB schema 與 migration (@paperclipai/db)
 │   │   └── src/
-│   │       ├── schema/   # Drizzle テーブル定義 (~70 テーブル)
+│   │       ├── schema/   # Drizzle 資料表定義（約 70 張資料表）
 │   │       └── migrations/
-│   ├── shared/           # 共有型・定数 (@paperclipai/shared)
-│   ├── adapter-utils/    # アダプター共通ユーティリティ
-│   ├── mcp-server/       # MCP サーバー実装
-│   ├── adapters/         # エージェントアダプター群
-│   │   ├── claude-local/   # Claude Code ローカル実行
-│   │   ├── codex-local/    # OpenAI Codex ローカル実行
-│   │   ├── cursor-local/   # Cursor ローカル実行
-│   │   ├── gemini-local/   # Gemini ローカル実行
-│   │   ├── openclaw-gateway/ # OpenClaw Webhook ゲートウェイ
-│   │   ├── opencode-local/ # OpenCode ローカル実行
-│   │   ├── pi-local/       # Pi ローカル実行
-│   │   └── acpx-local/     # ACPX ローカル実行
+│   ├── shared/           # 共用型別與常數 (@paperclipai/shared)
+│   ├── adapter-utils/    # adapter 共用工具
+│   ├── mcp-server/       # MCP server 實作
+│   ├── adapters/         # 代理程式 adapter 群
+│   │   ├── claude-local/   # Claude Code 本機執行
+│   │   ├── codex-local/    # OpenAI Codex 本機執行
+│   │   ├── cursor-local/   # Cursor 本機執行
+│   │   ├── gemini-local/   # Gemini 本機執行
+│   │   ├── openclaw-gateway/ # OpenClaw Webhook gateway
+│   │   ├── opencode-local/ # OpenCode 本機執行
+│   │   ├── pi-local/       # Pi 本機執行
+│   │   └── acpx-local/     # ACPX 本機執行
 │   └── plugins/
-│       ├── sdk/            # プラグイン開発 SDK (@paperclipai/plugin-sdk)
-│       └── examples/       # サンプルプラグイン
-├── doc/                  # 内部設計ドキュメント
-├── docs/                 # Mintlify 公開ドキュメント
-├── evals/                # LLM 評価スクリプト (promptfoo)
-├── skills/               # エージェントスキル定義
-├── scripts/              # ビルド・リリーススクリプト
-├── tests/                # E2E・リリーススモークテスト
+│       ├── sdk/            # plugin 開發 SDK (@paperclipai/plugin-sdk)
+│       └── examples/       # 範例 plugin
+├── doc/                  # 內部設計文件
+├── docs/                 # Mintlify 公開文件
+├── evals/                # LLM 評估腳本 (promptfoo)
+├── skills/               # 代理程式 skill 定義
+├── scripts/              # 建置與發布腳本
+├── tests/                # E2E 與發布 smoke 測試
 ├── docker/               # Docker/Compose 設定
-└── releases/             # リリース管理
+└── releases/             # 發布管理
 ```
 
 ---
 
-## アーキテクチャパターン
+## 架構模式
 
 - **Monorepo**（pnpm workspaces）
-- **Server-side Rendered + SPA Hybrid**: Express が静的ファイルを serve し、React SPA として動作
-- **Embedded PostgreSQL**: ローカル開発はゼロ設定、本番は外部 Postgres に切り替え可能
-- **Plugin Architecture**: out-of-process Worker による拡張プラグインシステム
-- **Adapter Pattern**: 各エージェントランタイムをアダプター経由で統一インターフェースに
+- **Server-side Rendered + SPA Hybrid**：Express 提供靜態檔案，以 React SPA 方式運作
+- **Embedded PostgreSQL**：本機開發零設定，正式環境可切換為外部 Postgres
+- **Plugin Architecture**：透過 out-of-process Worker 的可擴展 plugin 系統
+- **Adapter Pattern**：各代理程式 runtime 透過 adapter 統一為一致介面
 
 ---
 
-## 既存ドキュメント一覧
+## 現有文件清單
 
-### `doc/` 内部設計ドキュメント
+### `doc/` 內部設計文件
 
-| ファイル | 内容 |
-|--------|------|
-| `doc/SPEC.md` | 技術仕様（Company/Agent/Org/Heartbeat/Budget モデル） |
-| `doc/SPEC-implementation.md` | V1 実装契約 |
-| `doc/PRODUCT.md` | プロダクト定義・設計原則 |
-| `doc/DEVELOPING.md` | 開発ガイド（DB/テスト/Docker/worktree 詳細） |
-| `doc/DEPLOYMENT-MODES.md` | デプロイモード定義 |
-| `doc/TASKS.md` | タスク管理データモデル |
-| `doc/TASKS-mcp.md` | MCP タスク仕様 |
-| `doc/GOAL.md` | ゴール管理仕様 |
-| `doc/CLI.md` | CLI コマンドリファレンス |
-| `doc/DATABASE.md` | DB 設計ドキュメント |
-| `doc/DOCKER.md` | Docker 詳細手順 |
-| `doc/RELEASING.md` | リリースプロセス |
-| `doc/plugins/PLUGIN_SPEC.md` | プラグインシステム仕様 |
-| `doc/execution-semantics.md` | 実行セマンティクス |
-| `doc/memory-landscape.md` | メモリ/コンテキスト設計 |
+| 檔案 | 內容 |
+|------|------|
+| `doc/SPEC.md` | 技術規格（Company/Agent/Org/Heartbeat/Budget 模型） |
+| `doc/SPEC-implementation.md` | V1 實作契約 |
+| `doc/PRODUCT.md` | 產品定義與設計原則 |
+| `doc/DEVELOPING.md` | 開發指南（DB/測試/Docker/worktree 詳細說明） |
+| `doc/DEPLOYMENT-MODES.md` | 部署模式定義 |
+| `doc/TASKS.md` | 任務管理資料模型 |
+| `doc/TASKS-mcp.md` | MCP 任務規格 |
+| `doc/GOAL.md` | goal 管理規格 |
+| `doc/CLI.md` | CLI 命令參考 |
+| `doc/DATABASE.md` | DB 設計文件 |
+| `doc/DOCKER.md` | Docker 詳細操作說明 |
+| `doc/RELEASING.md` | 發布流程 |
+| `doc/plugins/PLUGIN_SPEC.md` | plugin 系統規格 |
+| `doc/execution-semantics.md` | 執行語義 |
+| `doc/memory-landscape.md` | 記憶體/context 設計 |
 
-### `docs/` 公開ドキュメント（Mintlify）
+### `docs/` 公開文件（Mintlify）
 
-- `docs/start/` — クイックスタート・アーキテクチャ
-- `docs/adapters/` — アダプターガイド
-- `docs/api/` — API リファレンス
-- `docs/companies/` — 会社管理ガイド
-- `docs/deploy/` — デプロイガイド
-- `docs/guides/` — 開発者ガイド
-
----
-
-## 既存ドキュメントと実際のコードの照合
-
-### 一致している点
-- `doc/SPEC.md` が記述するエンティティ（Company, Agent, Issue, Heartbeat Run, Budget Policy）はすべて `packages/db/src/schema/` のテーブルとして実装済み
-- アダプタータイプ（claude_local, codex_local, openclaw_gateway 等）は `packages/adapters/` と一致
-
-### 落差・注意点
-- `doc/SPEC.md` に記載の「billing codes」と「request depth」は schema に実装済み（`issues.billing_code`, `issues.request_depth`）だが、UI 上での表示・編集は ⚠️ 未確認
-- `doc/SPEC.md` の「Budget Delegation（cascading）」は `server/src/services/budgets.ts` で月次ウィンドウ・生涯ウィンドウのポリシーとして実装されているが、完全な cascading 委任は ⚠️ 一部未実装の可能性あり
-- `ROADMAP.md` の「Memory / Knowledge」「Enforced Outcomes」「CEO Chat」「Cloud deployments」は⚪未実装
+- `docs/start/` — 快速入門・架構說明
+- `docs/adapters/` — adapter 指南
+- `docs/api/` — API 參考
+- `docs/companies/` — 公司管理指南
+- `docs/deploy/` — 部署指南
+- `docs/guides/` — 開發者指南
 
 ---
 
-## 設定ファイル
+## 現有文件與實際程式碼的對照
 
-### `.env.example` の主要環境変数
+### 吻合之處
+- `doc/SPEC.md` 所描述的實體（Company、Agent、Issue、Heartbeat Run、Budget Policy）均已在 `packages/db/src/schema/` 中以資料表形式實作
+- Adapter 類型（claude_local、codex_local、openclaw_gateway 等）與 `packages/adapters/` 一致
+
+### 落差與注意事項
+- `doc/SPEC.md` 中記載的「billing codes」與「request depth」已在 schema 中實作（`issues.billing_code`、`issues.request_depth`），但在 UI 上的顯示與編輯 ⚠️ 尚未確認
+- `doc/SPEC.md` 的「Budget Delegation（cascading）」已在 `server/src/services/budgets.ts` 中以月結視窗・終身視窗的 policy 方式實作，但完整的 cascading 委派 ⚠️ 可能部分尚未實作
+- `ROADMAP.md` 中的「Memory / Knowledge」「Enforced Outcomes」「CEO Chat」「Cloud deployments」⚪ 尚未實作
+
+---
+
+## 設定檔
+
+### `.env.example` 的主要環境變數
 
 ```
-DATABASE_URL=postgres://...        # 未設定時は embedded postgres 使用
+DATABASE_URL=postgres://...        # 未設定時使用 embedded postgres
 PORT=3100
-SERVE_UI=false                     # 本番は true
+SERVE_UI=false                     # 正式環境設為 true
 BETTER_AUTH_SECRET=...
-PAPERCLIP_TELEMETRY_DISABLED=1     # テレメトリ無効化
+PAPERCLIP_TELEMETRY_DISABLED=1     # 停用 telemetry
 ```
 
-### デプロイモード
+### 部署模式
 
-| モード | 説明 |
-|-------|------|
-| `local_trusted` | シングルユーザー・ログイン不要（デフォルト） |
-| `authenticated` | 認証必須。`private`（LAN/Tailscale）または `public` 露出 |
+| 模式 | 說明 |
+|------|------|
+| `local_trusted` | 單一使用者・無需登入（預設） |
+| `authenticated` | 必須驗證。`private`（LAN/Tailscale）或 `public` 公開存取 |
 
 ---
 
-## ファイル規模
+## 檔案規模
 
-- TypeScript ファイル: 1,149 個
-- TSX ファイル: 304 個
-- 総ファイル数（非 node_modules）: 2,007 個
-- DB スキーマテーブル: 約 70 テーブル
-- API ルートファイル: 40+
-- サービスファイル: 80+
+- TypeScript 檔案：1,149 個
+- TSX 檔案：304 個
+- 總檔案數（不含 node_modules）：2,007 個
+- DB schema 資料表：約 70 張
+- API 路由檔案：40 個以上
+- Service 檔案：80 個以上
 
-> **Stage 1.5 評価**: 2,007 ファイルで 500 超。Full trace として継続する。
-> プロジェクトは API サーバー + フロントエンド + CLI + プラグインシステムを持つ複合型のため、全 trace 路径が適用される。
+> **Stage 1.5 評估**：2,007 個檔案，超過 500。作為 Full trace 繼續進行。
+> 本專案為 API 伺服器 + 前端 + CLI + plugin 系統的複合型專案，因此適用所有 trace 路徑。
