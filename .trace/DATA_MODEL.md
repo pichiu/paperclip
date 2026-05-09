@@ -199,7 +199,7 @@ erDiagram
 
 ---
 
-## 3. DB スキーマ摘要
+## 3. DB Schema 摘要
 
 ### companies — 組織根節點
 
@@ -248,7 +248,7 @@ stateDiagram-v2
     [*] --> backlog : 建立 Issue
 
     backlog --> todo : 手動排程 / 自動排程
-    todo --> in_progress : checkout（楽觀鎖 UPDATE WHERE status = ANY(expectedStatuses)）
+    todo --> in_progress : checkout（樂觀鎖 UPDATE WHERE status = ANY(expectedStatuses)）
     in_progress --> in_review : Agent 完成工作後提交審查
     in_review --> done : Board / 自動審查通過
     in_review --> in_progress : 審查不通過，重新執行
@@ -268,7 +268,7 @@ stateDiagram-v2
     cancelled --> [*]
 ```
 
-> **楽觀鎖機制**：checkout 時執行 `UPDATE issues SET status='in_progress' WHERE id=? AND status=ANY(expectedStatuses)`，若 `expectedStatuses` 不符（他人已搶先執行）則回傳 `409 Conflict`。
+> **樂觀鎖機制**：checkout 時執行 `UPDATE issues SET status='in_progress' WHERE id=? AND status=ANY(expectedStatuses)`，若 `expectedStatuses` 不符（他人已搶先執行）則回傳 `409 Conflict`。
 
 ---
 
