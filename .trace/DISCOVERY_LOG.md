@@ -1,218 +1,218 @@
-# DISCOVERY_LOG.md — 探索中の発見・問題・技術債記録
+# DISCOVERY_LOG.md — 探索過程中的發現、問題與技術債記錄
 
-> 生成日: 2026-05-05
-> 対象コミット: main ブランチ（探索時点）
-> ⚠️ 未驗證 = このトレースセッション内で確認できなかった情報
+> 生成日：2026-05-05
+> 對象 commit：main branch（探索時間點）
+> ⚠️ 未驗證 = 本次 trace session 中無法直接確認的資訊
 
 ---
 
-## 1. Web Search 発見摘要
+## 1. Web Search 發現摘要
 
-### プロジェクトの位置づけと成長速度
+### 專案定位與成長速度
 
-Paperclip は 2026年3月4日に公開され、3週間で GitHub Stars 30,000 超を達成した。外部メディアは "Open-Source Operating System for Multi-Agent Companies" と評している（Towards AI）。マーケティング上の核心フレーズは「If OpenClaw is an _employee_, Paperclip is the _company_」。
+Paperclip 於 2026 年 3 月 4 日公開，三週內 GitHub Stars 突破 30,000。外部媒體將其評為「多 Agent 公司的開源作業系統」（Towards AI）。行銷核心句為「If OpenClaw is an _employee_, Paperclip is the _company_」。
 
-### ハートビートパターンの外部説明（MindStudio 記事より）
+### Heartbeat pattern 的外部說明（MindStudio 文章）
 
 > "The heartbeat pattern is a scheduling and context-management mechanism that wakes an AI agent at regular intervals, injects fresh context into its working memory, and allows it to operate without any human trigger."
 
-コードで確認済み：`server/src/services/heartbeat.ts`（9,000行超）がこのパターンを実装。`agentWakeupRequests` → `heartbeatRuns` → adapter 実行の DB-backed キューとして動作。
+程式碼中已確認：`server/src/services/heartbeat.ts`（超過 9,000 行）實作此 pattern。運作方式為 `agentWakeupRequests` → `heartbeatRuns` → adapter 執行的 DB-backed queue。
 
-### バージョン形式の慣習
+### 版本號慣例
 
-リリースは `v{year}.{dayOfYear}.{patch}` 形式（例: `v2026.318.0`）。日付ベースのバージョンニングで semver は不採用。
+Release 採用 `v{year}.{dayOfYear}.{patch}` 格式（例：`v2026.318.0`）。以日期為基礎的版本號，不採用 semver。
 
-### コミュニティエコシステムの現状
+### 社群生態現況
 
-- `https://github.com/gsxdsm/awesome-paperclip` にコミュニティプラグイン集あり
-- ClipHub（ワンクリック会社テンプレート配布）は⚪ COMING SOON 状態
-- `doc/CLIPHUB.md` に設計仕様あり。`docs/specs/cliphub-plan.md` は部分的に superseded
+- `https://github.com/gsxdsm/awesome-paperclip` 有社群 plugin 彙整
+- ClipHub（一鍵公司範本配布）目前為 ⚪ COMING SOON 狀態
+- `doc/CLIPHUB.md` 有設計規格；`docs/specs/cliphub-plan.md` 已部分 superseded
 
-### ⚠️ 未驗證 の外部情報
+### ⚠️ 未驗證的外部資訊
 
-- `paperclipai.net` という別ドメインが存在するが公式との関係不明
-- `agencyenterprise/paperclip-ai` というフォークが存在するが活動状況・目的不明
-- Discord `#dev` チャンネルへの PR 提出前の相談が推奨されているが、実際の応答速度・受け入れ基準は確認不能
+- `paperclipai.net` 另一個網域存在，但與官方的關係不明
+- `agencyenterprise/paperclip-ai` fork 存在，但活動狀況與目的不明
+- Discord `#dev` channel 建議在提交 PR 前先討論，但實際回應速度與接受標準無法確認
 
 ---
 
-## 2. 既存ドキュメントとコードの乖離
+## 2. 現有文件與程式碼的落差
 
-### 2.1 `billing_code` / `request_depth` — 実装済みだが UI 欠如
+### 2.1 `billing_code` / `request_depth` — 已實作但缺乏 UI
 
-**ドキュメント**: `doc/SPEC.md` に `billing_code`（コスト帰属用コード）と `request_depth`（エージェント委任の深さ）が言及。
+**文件記載**：`doc/SPEC.md` 提及 `billing_code`（費用歸屬碼）與 `request_depth`（agent 委派深度）。
 
-**コード実態**:
-- `packages/db/src/schema/issues.ts:48-49` — `requestDepth`, `billingCode` カラムが DB スキーマに存在
-- `packages/db/src/schema/cost_events.ts:19` — `billing_code` カラムあり
-- `packages/db/src/schema/finance_events.ts:21` — `billing_code` カラムあり
+**程式碼實際狀況**：
+- `packages/db/src/schema/issues.ts:48-49` — DB schema 中已有 `requestDepth`、`billingCode` 欄位
+- `packages/db/src/schema/cost_events.ts:19` — 有 `billing_code` 欄位
+- `packages/db/src/schema/finance_events.ts:21` — 有 `billing_code` 欄位
 
-**乖離**: UI（`ui/src/`）には `billing_code` / `request_depth` の表示・編集コンポーネントが見当たらない。⚠️ 未驗證 — データは蓄積されているが Board 画面で参照・利用できない可能性。
+**落差**：UI（`ui/src/`）中找不到 `billing_code` / `request_depth` 的顯示或編輯元件。⚠️ 未驗證 — 資料雖已累積，但在 Board 畫面可能無法查閱或使用。
 
-### 2.2 Budget Delegation（カスケード委任）— 設計は明記、実装は部分的
+### 2.2 Budget Delegation（cascading 委派）— 設計已明確，實作僅部分完成
 
-**ドキュメント**: `doc/SPEC.md` §1（Board Governance）に「CEO がエージェントに予算を委任でき、マネージャーエージェントもレポートに委任可能」と記載。
+**文件記載**：`doc/SPEC.md` §1（Board Governance）記載「CEO 可將 budget 委派給 agent，manager agent 也可再委派給下屬」。
 
-**コード実態**:
-- `server/src/services/budgets.ts` は Company / Project / Agent の3階層ポリシーを実装
-- `getInvocationBlock()` で全階層を確認する仕組みあり
+**程式碼實際狀況**：
+- `server/src/services/budgets.ts` 實作了 Company / Project / Agent 三層政策
+- `getInvocationBlock()` 可跨層檢查
 
-**乖離**: SPEC の「cascading budget delegation」（CEO→部下への連鎖委任）が完全実装されているかは ⚠️ 未驗證。`doc/SPEC.md` 自体に「How this cascading budget delegation works in practice is TBD」と明記されており、仕様レベルで未確定。
+**落差**：SPEC 中的「cascading budget delegation」（CEO → 下屬的連鎖委派）是否完整實作 ⚠️ 未驗證。`doc/SPEC.md` 本身也明確記載「How this cascading budget delegation works in practice is TBD」，代表規格層面尚未確定。
 
-### 2.3 `doc/SPEC.md` の V1 チェックリスト — 一部 DRAFT 状態のまま残存
+### 2.3 `doc/SPEC.md` 的 V1 checklist — 部分仍為 DRAFT 狀態
 
-`doc/SPEC.md` §9（Frontend/UI）と §10（V1 Scope）は `[DRAFT]` マークが付いたまま。チェックリスト形式の V1 Must Have 項目も `[ ]` 未チェックのものが多く残る。これは仕様書としての信頼性に疑問を生じさせる — 実装は完成しているが文書がメンテされていない可能性。
+`doc/SPEC.md` §9（Frontend/UI）與 §10（V1 Scope）仍帶有 `[DRAFT]` 標記。以 checklist 形式列出的 V1 Must Have 項目中，許多 `[ ]` 尚未勾選。這使文件的可信度存疑——實作可能已完成，但文件未跟進維護。
 
-### 2.4 `doc/plans/` の設計計画ドキュメント — 一部 superseded
+### 2.4 `doc/plans/` 的設計計畫文件 — 部分已 superseded
 
-`doc/AGENTCOMPANIES_SPEC_INVENTORY.md` で `docs/specs/cliphub-plan.md` が "Earlier blueprint bundle plan; partially superseded" と明記。`doc/plans/` 内の各計画ドキュメント（例: `2026-02-16-module-system.md`）が現在の実装とどの程度整合しているか、個別確認が必要。
+`doc/AGENTCOMPANIES_SPEC_INVENTORY.md` 明確記載 `docs/specs/cliphub-plan.md` 為「Earlier blueprint bundle plan; partially superseded」。`doc/plans/` 內的各計畫文件（例：`2026-02-16-module-system.md`）與當前實作的整合程度，需逐一確認。
 
-### 2.5 `server/src/services/github-fetch.ts` の用途が不明確
+### 2.5 `server/src/services/github-fetch.ts` 用途不明確
 
-**コード実態**:
-- `server/src/services/company-portability.ts` と `server/src/services/company-skills.ts` が `ghFetch`, `gitHubApiBase`, `resolveRawGitHubUrl` をインポートしている
+**程式碼實際狀況**：
+- `server/src/services/company-portability.ts` 與 `server/src/services/company-skills.ts` 匯入了 `ghFetch`、`gitHubApiBase`、`resolveRawGitHubUrl`
 
-**乖離**: `doc/` 内のドキュメントには GitHub 連携の詳細説明なし。Company Import/Export で GitHub 上のスキルや会社テンプレートを直接取得する機能と推測されるが、⚠️ 未驗證。
+**落差**：`doc/` 中沒有 GitHub 整合的詳細說明。推測是 Company Import/Export 時直接從 GitHub 取得 skill 或公司範本的功能，但 ⚠️ 未驗證。
 
 ---
 
 ## 3. TODO / FIXME / HACK 彙整
 
-コードベース全体（`server/src/`, `packages/`, `ui/src/`, `cli/src/`）を検索した結果、明示的な `TODO/FIXME/HACK` は少ないが、以下の重要なものを確認:
+對整個程式碼庫（`server/src/`、`packages/`、`ui/src/`、`cli/src/`）進行搜尋後，明確的 `TODO/FIXME/HACK` 雖不多，但確認了以下重要項目：
 
-| 場所 | 種別 | 内容 |
+| 位置 | 種類 | 內容 |
 |------|------|------|
-| `ui/src/adapters/runtime-json-fields.tsx:5` | TODO | `// TODO(issue-worktree-support): re-enable this UI once the workflow is ready to ship.` — Issue-scoped worktree の UI が無効化されたまま |
-| `ui/src/pages/AgentDetail.tsx:882` | TODO | `// } else if (activeView === "skills") { // TODO: bring back later` — AgentDetail ページのスキルビューが無効化 |
-| `cli/src/commands/client/company.ts:383` | TODO | `// TODO: replace this temporary claude_local fallback with adapter selection in the import TUI.` — Company import TUI がアダプター選択なしで `claude_local` にフォールバック |
-| `server/src/services/plugin-loader.ts:170` | 未実装フラグ | `Registry support is not yet implemented; this field is reserved.` — プラグインリモートレジストリ機能が予約済みだが未実装 |
-| `server/src/services/plugin-loader.ts:1038` | 未実装フラグ | `"plugin-loader: remote registry discovery is not yet implemented"` — 実行時にもエラーを出す |
-| `ui/src/pages/RoutineDetail.tsx:1010` | UI フラグ | `{kind === "webhook" ? " — COMING SOON" : ""}` — Routine の Webhook トリガーが UI で COMING SOON 表示 |
-| `ui/src/adapters/metadata.ts:26,40` | 設計フラグ | `comingSoon` フラグによりアダプターを無効化する仕組みあり — どのアダプターが COMING SOON かは要確認 |
+| `ui/src/adapters/runtime-json-fields.tsx:5` | TODO | `// TODO(issue-worktree-support): re-enable this UI once the workflow is ready to ship.` — Issue-scoped worktree 的 UI 仍處於停用狀態 |
+| `ui/src/pages/AgentDetail.tsx:882` | TODO | `// } else if (activeView === "skills") { // TODO: bring back later` — AgentDetail 頁面的 skills 檢視停用中 |
+| `cli/src/commands/client/company.ts:383` | TODO | `// TODO: replace this temporary claude_local fallback with adapter selection in the import TUI.` — Company import TUI 缺少 adapter 選擇，暫時 fallback 至 `claude_local` |
+| `server/src/services/plugin-loader.ts:170` | 未實作旗標 | `Registry support is not yet implemented; this field is reserved.` — Plugin 遠端 registry 功能為保留欄位，尚未實作 |
+| `server/src/services/plugin-loader.ts:1038` | 未實作旗標 | `"plugin-loader: remote registry discovery is not yet implemented"` — 執行時也會拋出錯誤 |
+| `ui/src/pages/RoutineDetail.tsx:1010` | UI 旗標 | `{kind === "webhook" ? " — COMING SOON" : ""}` — Routine 的 webhook trigger 在 UI 顯示 COMING SOON |
+| `ui/src/adapters/metadata.ts:26,40` | 設計旗標 | 透過 `comingSoon` 旗標停用 adapter 的機制存在 — 哪些 adapter 為 COMING SOON 需進一步確認 |
 
 ---
 
-## 4. 未解答の疑問
+## 4. 未解答的疑問
 
-### アーキテクチャ上の疑問
+### 架構上的疑問
 
-**Q1. Plugin Remote Registry の設計意図**
-`plugin-loader.ts` に `"registry"` タイプが type union に含まれ `Registry support is not yet implemented` コメントがある。ClipHub との統合を想定しているのか、独立したプラグインレジストリなのか不明。
+**Q1. Plugin Remote Registry 的設計意圖**
+`plugin-loader.ts` 的 type union 中含有 `"registry"` 類型，並帶有 `Registry support is not yet implemented` 的註解。不清楚是否預計與 ClipHub 整合，或為獨立的 plugin registry。
 
-**Q2. GitHub Integration の全体像**
-`github-fetch.ts` が Company Portability と Company Skills から使われているが、認証フロー（GitHub トークンの管理場所）が不明。エージェントが GitHub PR を操作する場合と、Board が GitHub からスキルをインポートする場合で認証経路が異なる可能性。
+**Q2. GitHub 整合的全貌**
+`github-fetch.ts` 被 Company Portability 與 Company Skills 使用，但認證流程（GitHub token 的管理位置）不明。Agent 操作 GitHub PR 時的認證路徑，與 Board 從 GitHub 匯入 skill 時的認證路徑可能不同。
 
-**Q3. `embedded-postgres@18.1.0-beta.16` の「パッチ済み」の内容**
-`recon.md` に「パッチ済み」と記載があるが、どのような変更が加えられているかは確認していない。本番利用では外部 Postgres を推奨しているが、embedded の beta 版を本番で使うリスクは ⚠️ 未驗證。
+**Q3. `embedded-postgres@18.1.0-beta.16` 的「已 patch」內容**
+`recon.md` 記載為「已 patch」，但具體修改內容尚未確認。雖然建議正式環境使用外部 Postgres，但在正式環境使用 embedded 的 beta 版風險 ⚠️ 未驗證。
 
-**Q4. `feedbackService` の動作モード**
-`server/src/index.ts` の起動フローに `feedbackService(db)` があるが、`integrations.md` の記述では `server/src/services/feedback-share-client.ts` のフラッシュ間隔が 5000ms とある。フィードバックデータの送信先・プライバシー境界が `telemetry` と同様に適切に制御されているか ⚠️ 未驗證。
+**Q4. `feedbackService` 的運作模式**
+`server/src/index.ts` 啟動流程中有 `feedbackService(db)`，`integrations.md` 記載 `server/src/services/feedback-share-client.ts` 的 flush 間隔為 5000ms。feedback 資料的傳送目標與隱私邊界是否與 telemetry 同樣受到適當控制 ⚠️ 未驗證。
 
-**Q5. `MAXIMIZER MODE` の実装計画**
-`ROADMAP.md` に「⚪ MAXIMIZER MODE」とある。「more aggressive delegation, deeper follow-through」の具体的な実装イメージ（例: 並列実行数の制限緩和、承認ゲートのスキップ、自律エスカレーション閾値の変更）が不明。
+**Q5. `MAXIMIZER MODE` 的實作計畫**
+`ROADMAP.md` 中列有「⚪ MAXIMIZER MODE」。「更積極的委派、更深入的執行跟進」的具體實作意象（例：並行執行數上限放寬、略過 approval gate、自主上報閾值變更）不明。
 
-**Q6. `acpx_local` アダプターの "ACPX" 正体**
-`packages/adapters/acpx-local/` に `acpx_local` アダプターが存在するが、`recon.md` や外部記事に説明がない。⚠️ 未驗證。
+**Q6. `acpx_local` adapter 中「ACPX」的真實身份**
+`packages/adapters/acpx-local/` 中存在 `acpx_local` adapter，但 `recon.md` 或外部文章均無說明。⚠️ 未驗證。
 
-**Q7. `pi_local` アダプターの "Pi" エージェントの正体**
-同様に `packages/adapters/pi-local/` の Pi エージェントが何を指すか不明。Claude Pi モデルか、独立したエージェントランタイムか ⚠️ 未驗證。
+**Q7. `pi_local` adapter 中「Pi」agent 的真實身份**
+同樣地，`packages/adapters/pi-local/` 中的 Pi agent 所指為何不明。是 Claude Pi 模型，還是獨立的 agent runtime？⚠️ 未驗證。
 
 ---
 
-## 5. 既知の技術債
+## 5. 已知技術債
 
-### 5.1 `heartbeat.ts` の肥大化（9,000行超のモノリシックサービス）
+### 5.1 `heartbeat.ts` 過度龐大（超過 9,000 行的單體服務）
 
-**場所**: `server/src/services/heartbeat.ts`
+**位置**：`server/src/services/heartbeat.ts`
 
-**問題**: エージェントのライフサイクル全体（スケジューリング、コンテキスト構築、アダプター呼び出し、コスト記録、復旧、ウォッチドッグ）が単一ファイルに集中している。9,000行超は明らかに SRP（単一責任原則）違反。テストしにくく、変更リスクが高い。
+**問題**：agent 的完整生命週期（排程、context 建構、adapter 呼叫、費用記錄、復原、watchdog）集中在單一檔案。超過 9,000 行明顯違反 SRP（單一職責原則），難以測試，變更風險高。
 
-**影響範囲**: `data_flow.md` で示した Issue Checkout → Agent Execution の全フローがこのファイルに依存。
+**影響範圍**：`data_flow.md` 中描述的 Issue Checkout → Agent Execution 完整流程均依賴此檔案。
 
-### 5.2 Plugin Registry（リモート）が未実装のまま型定義に混在
+### 5.2 Plugin Registry（遠端）未實作，但型別定義中已混入
 
-**場所**: `server/src/services/plugin-loader.ts:110,170,1038`
+**位置**：`server/src/services/plugin-loader.ts:110,170,1038`
 
 ```typescript
 | "registry";  // future: remote plugin registry URL
 ```
 
-type union に将来用途の値が入っており、実行時にエラーを投げる。dead code として残っており、将来の実装者に混乱を与える。ClipHub の設計（`doc/CLIPHUB.md`）との接続点が設計済みだが未実装。
+type union 中含有未來用途的值，執行時會拋出錯誤。作為 dead code 殘留，會對未來的實作者造成混淆。與 ClipHub 設計（`doc/CLIPHUB.md`）的接入點已有設計，但尚未實作。
 
-### 5.3 Issue Worktree UI が無効化されたまま
+### 5.3 Issue Worktree UI 仍處於停用狀態
 
-**場所**: `ui/src/adapters/runtime-json-fields.tsx:5`
+**位置**：`ui/src/adapters/runtime-json-fields.tsx:5`
 
-`issue-worktree-support` というラベル付きで UI が無効化されている。`doc/plans/2026-03-10-workspace-strategy-and-git-worktrees.md` に設計計画があるが、実装が完了しているか不明。バックエンド側では `workspace_strategy = 'isolated'` が動作する可能性があるが、UI からの設定操作が欠けている。
+帶有 `issue-worktree-support` 標籤的 UI 已停用。`doc/plans/2026-03-10-workspace-strategy-and-git-worktrees.md` 有設計計畫，但實作是否完成不明。後端的 `workspace_strategy = 'isolated'` 可能已可運作，但缺少 UI 端的設定操作。
 
-### 5.4 AgentDetail スキルビューの無効化
+### 5.4 AgentDetail 的 skills 檢視停用
 
-**場所**: `ui/src/pages/AgentDetail.tsx:882`
+**位置**：`ui/src/pages/AgentDetail.tsx:882`
 
-エージェント詳細ページの「skills」タブが無効化されている。Skills Manager は ROADMAP.md で ✅ 完了扱いだが、エージェント単位でのスキルを詳細表示する UI サーフェスが欠けている。
+Agent 詳細頁面的「skills」tab 已停用。Skills Manager 在 ROADMAP.md 中標示為 ✅ 完成，但每個 agent 的 skill 詳細顯示 UI 尚缺。
 
-### 5.5 Company Import TUI のアダプター選択省略
+### 5.5 Company Import TUI 的 adapter 選擇省略
 
-**場所**: `cli/src/commands/client/company.ts:383`
+**位置**：`cli/src/commands/client/company.ts:383`
 
-会社インポート CLI の TUI が `claude_local` に一時フォールバックする。複数アダプターをサポートするエコシステムで、インポート時のアダプター選択がハードコードされている状態は、Codex・Gemini・OpenClaw ユーザーには機能制限となる。
+Company import CLI 的 TUI 暫時 fallback 至 `claude_local`。在支援多個 adapter 的生態系中，import 時以硬編碼指定 adapter，對 Codex、Gemini、OpenClaw 使用者而言是功能限制。
 
-### 5.6 `doc/SPEC.md` の複数箇所に `[DRAFT]` と `TBD` が残存
+### 5.6 `doc/SPEC.md` 多處殘留 `[DRAFT]` 與 `TBD`
 
-**場所**: `doc/SPEC.md` §1, §2, §9, §10
+**位置**：`doc/SPEC.md` §1, §2, §9, §10
 
-Board Governance の Approval Gates（「他のガバナンスゲートアクションは TBD」）、Budget Delegation（「TBD」）、Frontend Views（`[DRAFT]`）など、実装が進んだ後もドキュメントが更新されていない。新規参入者に誤った印象を与えるリスク。
+Board Governance 的 Approval Gates（「其他治理閘門動作 TBD」）、Budget Delegation（「TBD」）、Frontend Views（`[DRAFT]`）等，在實作推進後文件未同步更新。對新進參與者可能造成錯誤印象。
 
-### 5.7 `embedded-postgres` の beta バージョン使用
+### 5.7 `embedded-postgres` 使用 beta 版本
 
-**場所**: `packages/db/` の依存関係 `embedded-postgres@18.1.0-beta.16`
+**位置**：`packages/db/` 依賴 `embedded-postgres@18.1.0-beta.16`
 
-ローカル開発向けとして合理的だが、beta リリースであることはプロダクション安定性のリスク。`doc/DEVELOPING.md` と `doc/DATABASE.md` に「本番は外部 Postgres を推奨」と明記されているが、デプロイガイドを読まないユーザーがデフォルトで beta embedded Postgres を本番利用するケースが考えられる。
+作為本地開發用途是合理的，但 beta release 對正式環境穩定性存在風險。`doc/DEVELOPING.md` 與 `doc/DATABASE.md` 均明記「正式環境建議使用外部 Postgres」，但未閱讀部署指南的使用者可能在正式環境直接使用 beta embedded Postgres。
 
 ---
 
-## 6. さらに深く調査すべき区域
+## 6. 需要進一步深入調查的區域
 
-このトレースでカバーが不十分だった重要な領域:
+本次 trace 涵蓋不足的重要領域：
 
-| 区域 | 場所 | 理由 |
+| 區域 | 位置 | 原因 |
 |------|------|------|
-| **Evals フレームワーク** | `evals/` | `doc/plans/2026-03-13-agent-evals-framework.md` が存在。promptfoo ベースの LLM 評価基盤があるが内容未確認 |
-| **Recovery システムの詳細** | `server/src/services/recovery/` | Watchdog・孤立ラン検出・自動 Recovery Issue 生成の具体的な閾値や実装が未確認 |
-| **Memory Landscape** | `doc/memory-landscape.md` | メモリ/コンテキスト設計ドキュメントが存在するが内容未読。ROADMAP の「Memory/Knowledge」未実装項目と関連 |
-| **Execution Semantics** | `doc/execution-semantics.md` | 実行セマンティクスの詳細仕様。ハートビート間の Issue 状態遷移の formal な定義が含まれる可能性 |
-| **Smart Model Routing** | `doc/plans/2026-04-06-smart-model-routing.md` | モデル選択の自動化計画が 2026年4月に計画されたが、実装有無が不明 |
-| **VS Code Task Interoperability** | `doc/plans/2026-04-12-vscode-task-interoperability-plan.md` | VS Code タスク連携計画が存在するが内容・進捗未確認 |
-| **Agent OS Technical Report** | `doc/plans/2026-04-08-agent-os-technical-report.md` | エージェントOSとしての技術的検討の最新報告書。アーキテクチャの将来方向を理解する上で重要 |
-| **MCP Server 詳細** | `packages/mcp-server/` | Paperclip データを MCP として公開する実装の詳細（公開するツール・リソース定義）が未確認 |
-| **Skills ディレクトリ** | `skills/` | エージェントスキルの実際の markdown 定義群。Paperclip Skill（`skills/paperclip/SKILL.md`）の内容未確認 |
-| **テスト・Eval カバレッジ** | `tests/`, `evals/` | E2E テスト（Playwright）と promptfoo evals の実際の網羅範囲が未確認 |
-| **Untrusted PR Review** | `doc/UNTRUSTED-PR-REVIEW.md` | セキュリティ観点で重要な PR レビューポリシーが未読 |
+| **Evals 框架** | `evals/` | `doc/plans/2026-03-13-agent-evals-framework.md` 存在。有基於 promptfoo 的 LLM 評估基礎，但內容未確認 |
+| **Recovery 系統詳情** | `server/src/services/recovery/` | Watchdog、孤立 run 偵測、自動產生 Recovery Issue 的具體閾值與實作未確認 |
+| **Memory Landscape** | `doc/memory-landscape.md` | 記憶體/context 設計文件存在但未閱讀。與 ROADMAP 的「Memory/Knowledge」未實作項目相關 |
+| **Execution Semantics** | `doc/execution-semantics.md` | 執行語意詳細規格。可能包含 heartbeat 間 Issue 狀態轉換的正式定義 |
+| **Smart Model Routing** | `doc/plans/2026-04-06-smart-model-routing.md` | 2026 年 4 月提出的模型選擇自動化計畫，實作有無不明 |
+| **VS Code Task Interoperability** | `doc/plans/2026-04-12-vscode-task-interoperability-plan.md` | VS Code 任務整合計畫存在，但內容與進度未確認 |
+| **Agent OS Technical Report** | `doc/plans/2026-04-08-agent-os-technical-report.md` | 以 Agent OS 為題的最新技術報告。對理解架構未來方向具重要參考價值 |
+| **MCP Server 詳情** | `packages/mcp-server/` | 將 Paperclip 資料以 MCP 形式公開的實作細節（公開工具與資源定義）未確認 |
+| **Skills 目錄** | `skills/` | Agent skill 的實際 markdown 定義群。`skills/paperclip/SKILL.md` 的內容未確認 |
+| **測試・Eval 涵蓋範圍** | `tests/`, `evals/` | E2E 測試（Playwright）與 promptfoo evals 的實際涵蓋範圍未確認 |
+| **Untrusted PR Review** | `doc/UNTRUSTED-PR-REVIEW.md` | 從安全角度而言重要的 PR review 政策，尚未閱讀 |
 
 ---
 
-## 7. 維護者・コミュニティへの確認事項
+## 7. 維護者・社群確認事項
 
-Discord `#dev` チャンネルまたは GitHub Issue で確認すべき点:
+建議在 Discord `#dev` channel 或 GitHub Issue 中確認的事項：
 
-### 設計・ロードマップ
+### 設計・Roadmap
 
-1. **ClipHub / Plugin Remote Registry の統合計画**: `doc/CLIPHUB.md` が設計されているが、`plugin-loader.ts` の `"registry"` type と連携するのか、独立したシステムか確認が必要。
-2. **MAXIMIZER MODE の具体的な設計**: ロードマップに記載されているが、技術的な変更点（並列実行、承認ゲートの変更、ガバナンス境界）が不明。コア変更かプラグインとして実装するか。
-3. **Budget Delegation（cascading）の実装優先度**: `doc/SPEC.md` §1 で「TBD」と記載。CEO から下位エージェントへの予算委任がどの Milestone で実装される予定か。
+1. **ClipHub / Plugin Remote Registry 整合計畫**：`doc/CLIPHUB.md` 已有設計，但 `plugin-loader.ts` 的 `"registry"` type 是否與其連動，或為獨立系統，需確認。
+2. **MAXIMIZER MODE 的具體設計**：Roadmap 中有記載，但技術變更點（並行執行、approval gate 調整、治理邊界）不明。是核心變更還是以 plugin 實作？
+3. **Budget Delegation（cascading）的實作優先度**：`doc/SPEC.md` §1 記載為「TBD」。CEO 向下級 agent 的 budget 委派預計在哪個 Milestone 實作？
 
-### 技術的な懸念
+### 技術上的疑慮
 
-4. **`heartbeat.ts` のリファクタリング計画**: 9,000行超のファイルを分割する計画があるか。サービス分割の方針（例: SchedulerService, AdapterOrchestratorService 等）についての議論があれば参照先を教示してほしい。
-5. **`acpx_local` / `pi_local` アダプターの正式名称と対象エージェント**: 外部ドキュメントに説明がなく、どのエージェントランタイムを対象としているか不明。
-6. **Issue Worktree UI の再有効化時期**: `ui/src/adapters/runtime-json-fields.tsx` の `TODO(issue-worktree-support)` はいつ有効化される予定か。バックエンドは既に動作しているか。
-7. **`embedded-postgres` beta からの移行計画**: `18.1.0-beta.16` の stable リリースを待っているのか、別の embedded DB（PGlite 等）への移行を検討しているか。
+4. **`heartbeat.ts` 的重構計畫**：是否有計畫拆分超過 9,000 行的檔案？如有服務拆分方針（例：SchedulerService、AdapterOrchestratorService 等）的討論，希望提供參考連結。
+5. **`acpx_local` / `pi_local` adapter 的正式名稱與對象 agent**：外部文件無說明，不清楚針對哪個 agent runtime。
+6. **Issue Worktree UI 重新啟用時程**：`ui/src/adapters/runtime-json-fields.tsx` 的 `TODO(issue-worktree-support)` 預計何時啟用？後端是否已可運作？
+7. **`embedded-postgres` beta 版本的遷移計畫**：是否等待 `18.1.0-beta.16` 的 stable release，還是考慮遷移至其他 embedded DB（如 PGlite）？
 
-### ドキュメント整備
+### 文件整備
 
-8. **`doc/SPEC.md` の `[DRAFT]` セクション更新**: §9, §10 の DRAFT マークはいつ取り除かれる予定か。現在の実装状態を反映したドキュメント更新の優先度について。
-9. **`billing_code` / `request_depth` の UI サーフェス**: DB には存在するがダッシュボードで参照できない。将来の Cost Dashboard や Billing Ledger 機能（`doc/plans/2026-03-14-billing-ledger-and-reporting.md`）での利用を計画しているか。
+8. **`doc/SPEC.md` 中 `[DRAFT]` 章節的更新**：§9、§10 的 DRAFT 標記預計何時移除？文件更新以反映當前實作狀態的優先度為何？
+9. **`billing_code` / `request_depth` 的 UI 呈現**：DB 中已有資料，但 dashboard 無法查閱。是否計畫在未來的 Cost Dashboard 或 Billing Ledger 功能（`doc/plans/2026-03-14-billing-ledger-and-reporting.md`）中使用？
 
 ---
 
-*このドキュメントはトレースセッションの知識整理用であり、公式の技術ドキュメントではありません。⚠️ 未驗證 とマークした情報はコードやドキュメントで直接確認してください。*
+*本文件為 trace session 的知識整理用途，非官方技術文件。標記 ⚠️ 未驗證 的資訊請直接透過程式碼或文件確認。*

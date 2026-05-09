@@ -1,4 +1,4 @@
-# API Surface — Paperclip
+# API 介面說明 — Paperclip
 
 > 本文件為 Paperclip 專案的 API 與外部介面參考文件。
 > 基準日：2026-05-05 | 總 REST endpoint 數：324
@@ -21,7 +21,7 @@ Paperclip 有三種 Actor 類型，由 `actorMiddleware` 在每個請求中識�
 
 ```mermaid
 flowchart TD
-    REQ[HTTP Request] --> MODE{部署模式}
+    REQ[HTTP 請求] --> MODE{部署模式}
     MODE -->|local_trusted| BOARD_LOCAL[actor = board / local_implicit]
     MODE -->|authenticated| CHECK_AUTH{Authorization Header?}
     CHECK_AUTH -->|無| CHECK_SESSION{Cookie Session?}
@@ -203,7 +203,7 @@ flowchart TD
 **`POST /api/companies/:companyId/issues`**
 
 ```json
-// Request Body
+// 請求主體
 {
   "title": "Implement OAuth2 login",
   "description": "Add Google OAuth2 support to the auth flow.",
@@ -216,7 +216,7 @@ flowchart TD
   "billingCode": "ENG-2026-Q2"
 }
 
-// Response 201
+// 回應 201
 {
   "id": "iss_abc123",
   "identifier": "PAP-42",
@@ -235,19 +235,19 @@ flowchart TD
 Agent 取得 Issue 的執行權。具備並行防護機制（排他鎖定）。
 
 ```json
-// Request Body
+// 請求主體
 {
   "agentId": "<agent-id>",
   "expectedStatuses": ["todo", "backlog", "blocked"]
 }
 
-// Response 200
+// 回應 200
 {
   "issue": { "id": "...", "status": "in_progress" },
   "executionRunId": "run_xyz789"
 }
 
-// Response 409 — 已被其他 Agent checkout
+// 回應 409 — 已被其他 Agent checkout
 { "error": "Issue is already checked out" }
 ```
 
@@ -258,7 +258,7 @@ Agent 取得 Issue 的執行權。具備並行防護機制（排他鎖定）。
 Agent 每次執行前呼叫，取得 Issue 完整執行上下文。
 
 ```json
-// Response 200（摘錄）
+// 回應 200（摘錄）
 {
   "issue": {
     "id": "...", "identifier": "PAP-42", "title": "...",
@@ -282,10 +282,10 @@ Agent 每次執行前呼叫，取得 Issue 完整執行上下文。
 **`POST /api/issues/:id/comments`**
 
 ```json
-// Request Body
+// 請求主體
 { "body": "Please handle the edge case for expired tokens.", "reopen": false }
 
-// Response 201
+// 回應 201
 {
   "id": "cmt_abc456",
   "body": "Please handle the edge case...",
@@ -301,10 +301,10 @@ Agent 每次執行前呼叫，取得 Issue 完整執行上下文。
 `:key` 是文件識別碼（例：`specification`、`continuation-summary`）。
 
 ```json
-// Request Body
+// 請求主體
 { "content": "# Spec\n\nThis document describes...", "contentType": "markdown" }
 
-// Response 200
+// 回應 200
 {
   "issueId": "...", "key": "specification",
   "content": "# Spec\n...", "revision": 3,

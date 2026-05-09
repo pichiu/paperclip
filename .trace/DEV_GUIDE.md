@@ -28,7 +28,7 @@
 
 > PostgreSQL **不需要**手動安裝。Paperclip 在本地開發時自動使用 embedded PostgreSQL。
 
-### Step-by-Step 環境構建
+### 逐步環境構建
 
 ```sh
 # 1. Clone repo
@@ -43,8 +43,8 @@ pnpm dev
 ```
 
 啟動後可看到：
-- **API Server**: `http://localhost:3100`
-- **UI (Dashboard)**: 由 API Server 以 dev middleware 模式提供，同一 origin
+- **API Server**：`http://localhost:3100`
+- **UI（Dashboard）**：由 API Server 以 dev middleware 模式提供，同一 origin
 
 ### `.env` 設定（可選）
 
@@ -191,12 +191,12 @@ pnpm test:e2e
 pnpm test:release-smoke
 ```
 
-> E2E 測試適用於：UI 頁面 flow、agent join 流程、瀏覽器行為驗證。  
+> E2E 測試適用於：UI 頁面 flow、agent join 流程、瀏覽器行為驗證。
 > **不要**把 E2E 當成日常 unit test 使用——執行成本高。
 
 ### 最小化測試原則
 
-> 「從最小範圍的 targeted check 開始。只有在 PR 準備好或改動範圍夠廣時，才跑全 repo 的 typecheck / build / test。」  
+> 「從最小範圍的 targeted check 開始。只有在 PR 準備好或改動範圍夠廣時，才跑全 repo 的 typecheck / build / test。」
 > — `doc/DEVELOPING.md`
 
 ---
@@ -258,8 +258,8 @@ PORT=3200 pnpm dev
 
 ### `Restart Required` 橫幅
 
-`pnpm dev:once` 追蹤 backend 相關的檔案變更與 pending migration。  
-若偵測到 boot 已過時，UI 會顯示 `Restart required` 橫幅。  
+`pnpm dev:once` 追蹤 backend 相關的檔案變更與 pending migration。
+若偵測到 boot 已過時，UI 會顯示 `Restart required` 橫幅。
 可至 `Instance Settings > Experimental` 啟用 **guarded auto-restart**（等待 running agent 完成後自動重啟）。
 
 ### 查看 Logs
@@ -295,14 +295,14 @@ pnpm paperclipai run
 
 ### 兩種 PR 路徑
 
-**Path 1：小型聚焦修改（最快合併）**
+**路徑 1：小型聚焦修改（最快合併）**
 - 一個明確的修復/改進
 - 觸碰最少數量的檔案
 - 所有測試通過，CI green
 - Greptile score **5/5**，所有 Greptile 評論已處理
 - 使用 PR template
 
-**Path 2：較大或有影響力的改動**
+**路徑 2：較大或有影響力的改動**
 1. 先至 Discord `#dev` 討論方向
 2. 獲得粗略共識後再寫 code
 3. PR 中附上 Before/After 截圖或影片
@@ -323,13 +323,13 @@ git checkout -b PAP-<issue-id>-short-description
 
 每個 PR **必須**包含：
 
-1. **PR Template** (`.github/PULL_REQUEST_TEMPLATE.md`) 完整填寫
+1. **PR Template**（`.github/PULL_REQUEST_TEMPLATE.md`）完整填寫
    - Thinking Path（從整體架構到具體修改的思考路徑）
-   - What Changed
+   - What Changed（變更內容）
    - Verification（如何驗證）
-   - Risks
+   - Risks（風險說明）
    - **Model Used**（使用的 AI model，或 "None — human-authored"）
-   - Checklist
+   - Checklist（檢查清單）
 
 2. **Greptile Score 5/5**：所有自動 review 評論皆已處理
 
@@ -439,7 +439,7 @@ pnpm paperclipai worktree reseed --from-instance default --seed-mode minimal
 
 | 模式 | 說明 | 適用情境 |
 |------|------|---------|
-| `minimal`（預設） | 保留核心 app state（companies, projects, issues 等），略過 heartbeat runs 等歷史資料 | 一般 feature 開發 |
+| `minimal`（預設） | 保留核心 app state（companies、projects、issues 等），略過 heartbeat runs 等歷史資料 | 一般 feature 開發 |
 | `full` | 完整邏輯複製 | 需要還原完整歷史狀態時 |
 | `--no-seed` | 空白 instance | 全新功能開發、不需要既有資料 |
 
